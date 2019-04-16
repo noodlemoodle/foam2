@@ -180,4 +180,7 @@ FOAM_FILES([
   { name: "foam/nanos/ruler/Operations" },
   { name: "foam/nanos/ruler/RuleHistory" },
   { name: "foam/nanos/ruler/RuleHistoryStatus" },
+  { name: "foam/nanos/test/EchoService" },
+  { name: "foam/nanos/test/SerializationTestEchoService" },
+  { name: "foam/nanos/test/ClientEchoService" }
 ]);
