@@ -47,8 +47,7 @@ public class StandardAuthorizer implements Authorizer {
 
   public void authorizeOnRead(X x, FObject obj) throws AuthorizationException {
 
-    Object id = obj.getProperty("id");
-    String permission = createPermission("read", id);
+    String permission = createPermission("read", obj.getProperty("id"));
     AuthService authService = (AuthService) x.get("auth");
     
     if ( ! authService.check(x, permission) ) {
@@ -58,8 +57,7 @@ public class StandardAuthorizer implements Authorizer {
 
   public void authorizeOnUpdate(X x, FObject oldObj, FObject obj) throws AuthorizationException {
 
-    Object id = oldObj.getProperty("id");
-    String permission = createPermission("update", id);
+    String permission = createPermission("update", obj.getProperty("id"));
     AuthService authService = (AuthService) x.get("auth");
     
     if ( ! authService.check(x, permission) ) {
@@ -69,8 +67,7 @@ public class StandardAuthorizer implements Authorizer {
 
   public void authorizeOnDelete(X x, FObject obj) throws AuthorizationException {
 
-    Object id = obj.getProperty("id");
-    String permission  = createPermission("remove", id);
+    String permission  = createPermission("remove", obj.getProperty("id"));
     AuthService authService = (AuthService) x.get("auth");
     
     if ( ! authService.check(x, permission) ) {
