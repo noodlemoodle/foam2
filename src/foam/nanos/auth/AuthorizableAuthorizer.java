@@ -19,7 +19,7 @@ public class AuthorizableAuthorizer implements Authorizer {
     return instance_;
   }
 
-  private AuthorizableAuthorizer() {}
+  public AuthorizableAuthorizer() {  }
 
   public void authorizeOnCreate(X x, FObject obj) throws AuthorizationException {
     if ( obj instanceof Authorizable ) {

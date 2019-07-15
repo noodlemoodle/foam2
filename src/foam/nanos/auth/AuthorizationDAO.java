@@ -16,17 +16,31 @@ import foam.mlang.predicate.Predicate;
  * A DAO decorator to run authorization checks.
  */
 public class AuthorizationDAO extends ProxyDAO {
-  public Authorizer authorizer_;
+  protected Authorizer authorizer_;
+  protected boolean authorizedRead_;
+  protected String name_;
 
-  public AuthorizationDAO(X x, DAO delegate) {
-    this(x, delegate, AuthorizableAuthorizer.instance());
+  public AuthorizationDAO(X x, String name, DAO delegate) {
+    this(x, name, true, delegate, StandardAuthorizer.instance("service"));
   }
 
-  public AuthorizationDAO(X x, DAO delegate, Authorizer authorizer) {
+  public AuthorizationDAO(X x, String name, DAO delegate, Authorizer authorizer) {
+    this(x, name, true, delegate, authorizer);
+  }
+
+  public AuthorizationDAO(X x, String name, boolean authorizedRead, DAO delegate) {
+    this(x, name, authorizedRead, delegate, StandardAuthorizer.instance(name));
+  }
+
+  public AuthorizationDAO(X x, String name, boolean authorizedRead, DAO delegate, Authorizer authorizer) {
     setX(x);
     setDelegate(delegate);
     authorizer_ = authorizer;
+    authorizedRead_ = authorizedRead;
+    name_ = name;
   }
+
+  
 
   @Override
   public FObject put_(X x, FObject obj) throws AuthorizationException {
@@ -40,7 +54,7 @@ public class AuthorizationDAO extends ProxyDAO {
       authorizer_.authorizeOnCreate(x, obj);
     } else {
       authorizer_.authorizeOnUpdate(x, oldObj, obj);
-    }
+    } 
 
     return super.put_(x, obj);
   }
@@ -58,19 +72,32 @@ public class AuthorizationDAO extends ProxyDAO {
   public FObject find_(X x, Object id) {
     FObject obj = super.find_(x, id);
     if ( id == null || obj == null ) return null;
-    authorizer_.authorizeOnRead(x, obj);
+    if ( authorizedRead_ ) authorizer_.authorizeOnRead(x, obj);
     return obj;
   }
 
   @Override
   public Sink select_(X x, Sink sink, long skip, long limit, Comparator order, Predicate predicate) {
-    super.select_(x, new AuthorizationSink(x, authorizer_, sink), skip, limit, order, predicate);
+    AuthService auth = (AuthService) x.get("auth");
+    sink = ! authorizedRead_ || checkGlobalRead(x) ? sink : new AuthorizationSink(x, authorizer_, sink);
+
+    super.select_(x, sink, skip, limit, order, predicate);
     return sink;
   }
 
   @Override
   public void removeAll_(X x, long skip, long limit, Comparator order, Predicate predicate) {
-    Sink sink = new AuthorizationSink(x, authorizer_, new RemoveSink(x, getDelegate()), true);
+    Sink sink = checkGlobalRemove(x) ? new RemoveSink(x, getDelegate()) : new AuthorizationSink(x, authorizer_, new RemoveSink(x, getDelegate()), true);
     getDelegate().select_(x, sink, skip, limit, order, predicate);
+  }
+
+  public boolean checkGlobalRead(X x) {
+    AuthService auth = (AuthService) x.get("auth");
+    return auth.check(x, "service.read.*") || auth.check(x, name_ + ".read.*");
+  }
+
+  public boolean checkGlobalRemove(X x) {
+    AuthService auth = (AuthService) x.get("auth");
+    return auth.check(x, name_ + ".remove.*") || auth.check(x, name_ + ".delete.*");
   }
 }
