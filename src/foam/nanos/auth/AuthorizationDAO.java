@@ -39,9 +39,7 @@ public class AuthorizationDAO extends ProxyDAO {
     authorizedRead_ = authorizedRead;
     name_ = name;
   }
-
   
-
   @Override
   public FObject put_(X x, FObject obj) throws AuthorizationException {
     if ( obj == null ) throw new RuntimeException("Cannot put null.");
@@ -92,12 +90,16 @@ public class AuthorizationDAO extends ProxyDAO {
   }
 
   public boolean checkGlobalRead(X x) {
-    AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, "service.read.*") || auth.check(x, name_ + ".read.*");
+    return false;
+
+    // AuthService auth = (AuthService) x.get("auth");
+    // return auth.check(x, "service.read.*") || auth.check(x, name_ + ".read.*");
   }
 
   public boolean checkGlobalRemove(X x) {
-    AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, name_ + ".remove.*") || auth.check(x, name_ + ".delete.*");
+    return false;
+
+    // AuthService auth = (AuthService) x.get("auth");
+    // return auth.check(x, name_ + ".remove.*") || auth.check(x, name_ + ".delete.*");
   }
 }

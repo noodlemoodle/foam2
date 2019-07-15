@@ -163,7 +163,8 @@ if ( getContextualize() ) {
 }
 
 if ( getAuthenticate() ) {
-  delegate = new foam.dao.AuthenticatedDAO(
+  delegate = new foam.nanos.auth.AuthorizationDAO(
+    getX(),
     getName(),
     getAuthenticateRead(),
     delegate);
