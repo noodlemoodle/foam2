@@ -212,25 +212,17 @@ if ( getOrder() != null &&
 }
 
 if ( getAuthorize() ) {
-  if ( foam.nanos.auth.Authorizable.class.isAssignableFrom(getOf().getObjClass()) ) {
-    delegate = new foam.nanos.auth.AuthorizationDAO(getX(), delegate);
-    setAuthenticate(false);
-  } else {
-    logger.warning("EasyDAO", "authorize=true but 'of' ",getOf().getId(), "not Authorizable");
-  }
-}
-
-if ( getAuthenticate() ) {
-  delegate = new foam.dao.AuthenticatedDAO(
-    getPermissionPrefix(),
-    getAuthenticateRead(),
-    delegate);
+  delegate = new foam.nanos.auth.AuthorizationDAO(
+    getX(), 
+    getAuthorizeRead(), 
+    delegate, 
+    new foam.nanos.auth.StandardAuthorizer(getPermissionPrefix())
+    );
 }
 
 if ( getNSpec() != null &&
      getNSpec().getServe() &&
      ! getAuthorize() &&
-     ! getAuthenticate() &&
      ! getReadOnly() ) {
   //setReadOnly(true);
   logger.warning("EasyDAO", getNSpec().getName(), "Served DAO should be Authenticated, Authorized, or ReadOnly");
@@ -310,15 +302,9 @@ return delegate;
       value: false
     },
     {
-      /** Enable standard authentication. */
-      class: 'Boolean',
-      name: 'authenticate',
-      value: true
-    },
-    {
       /** Enable standard read authentication. */
       class: 'Boolean',
-      name: 'authenticateRead',
+      name: 'authorizeRead',
       value: true
     },
     {

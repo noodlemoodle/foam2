@@ -22,22 +22,17 @@ import static foam.mlang.MLang.HAS_PERMISSION;
  */
 public class AuthorizationDAO extends ProxyDAO {
   protected Authorizer authorizer_;
-  protected boolean authorizedRead_;
-  protected String name_;
+  protected boolean authorizeRead_;
 
-  public AuthorizationDAO(X x, String name, DAO delegate) {
-    this(x, name, true, delegate, StandardAuthorizer.instance(name));
+  public AuthorizationDAO(X x, DAO delegate, Authorizer authorizer) {
+    this(x, true, delegate, authorizer);
   }
 
-  public AuthorizationDAO(X x, String name, DAO delegate, Authorizer authorizer) {
-    this(x, name, true, delegate, authorizer);
+  public AuthorizationDAO(X x, boolean authorizeRead, DAO delegate, Authorizer authorizer) {
+    this(x, authorizeRead, delegate, authorizer);
   }
 
-  public AuthorizationDAO(X x, String name, boolean authorizedRead, DAO delegate) {
-    this(x, name, authorizedRead, delegate, StandardAuthorizer.instance(name));
-  }
-
-  public AuthorizationDAO(X x, String name, boolean authorizedRead, DAO delegate, Authorizer authorizer) {
+  public AuthorizationDAO(X x, boolean authorizeRead, DAO delegate, Authorizer authorizer) {
     AuthorizationException exception = new AuthorizationException("When " +
         "using a DAO decorated by AuthenticatedDAO, you may only call the " +
         "context-oriented methods: put_(), find_(), select_(), remove_(), " +
@@ -46,8 +41,7 @@ public class AuthorizationDAO extends ProxyDAO {
     setX(new InvalidX(exception));
     setDelegate(delegate);
     authorizer_ = authorizer;
-    authorizedRead_ = authorizedRead;
-    name_ = name;
+    authorizeRead_ = authorizeRead;
   }
 
   @Override
@@ -77,14 +71,13 @@ public class AuthorizationDAO extends ProxyDAO {
   public FObject find_(X x, Object id) {
     FObject obj = super.find_(x, id);
     if ( id == null || obj == null ) return null;
-    if ( authorizedRead_ ) authorizer_.authorizeOnRead(x, obj);
+    if ( authorizeRead_ ) authorizer_.authorizeOnRead(x, obj);
     return obj;
   }
 
   @Override
   public Sink select_(X x, Sink sink, long skip, long limit, Comparator order, Predicate predicate) {
-    // sink = ! authorizedRead_ || checkGlobalRead(x) ? sink : new AuthorizationSink(x, authorizer_, sink);
-    if ( authorizedRead_ ) {
+    if ( authorizeRead_ && ! authorizer.checkGlobalRead(x)) {
       super.select_(x, sink, skip, limit, order, augmentPredicate(x, predicate, "read"));
       return sink;
     }
@@ -93,29 +86,10 @@ public class AuthorizationDAO extends ProxyDAO {
 
   @Override
   public void removeAll_(X x, long skip, long limit, Comparator order, Predicate predicate) {
-    this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));
-  }
-
-  public boolean checkGlobalRead(X x) {
-    // return false;
-
-    AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, name_ + ".read.*");
-  }
-
-  public boolean checkGlobalRemove(X x) {
-    // return false;
-
-    AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, name_ + ".delete.*");
-  }
-
-  public Predicate augmentPredicate(X x, Predicate existingPredicate, String operation) {
-    return existingPredicate != null ?
-      AND(
-        HAS_PERMISSION(x, name_ + "." + operation + ".*"),
-        existingPredicate
-      ) : 
-      HAS_PERMISSION(x, name_ + "." + operation + ".*");
+    if( authorizer.checkGlobalRemove(x) ) {
+      this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));// TODO RUBY
+    } else {
+      this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));
+    }
   }
 }
