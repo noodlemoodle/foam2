@@ -87,7 +87,7 @@ public class AuthorizationDAO extends ProxyDAO {
   @Override
   public void removeAll_(X x, long skip, long limit, Comparator order, Predicate predicate) {
     if( authorizer.checkGlobalRemove(x) ) {
-      this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));// TODO RUBY
+      this.select_(x, new RemoveSink(x, this), skip, limit, order, predicate));
     } else {
       this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));
     }
