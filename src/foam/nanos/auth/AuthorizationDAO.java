@@ -100,14 +100,14 @@ public class AuthorizationDAO extends ProxyDAO {
     // return false;
 
     AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, "service.read.*") || auth.check(x, name_ + ".read.*");
+    return auth.check(x, name_ + ".read.*");
   }
 
   public boolean checkGlobalRemove(X x) {
     // return false;
 
     AuthService auth = (AuthService) x.get("auth");
-    return auth.check(x, name_ + ".remove.*") || auth.check(x, name_ + ".delete.*");
+    return auth.check(x, name_ + ".delete.*");
   }
 
   public Predicate augmentPredicate(X x, Predicate existingPredicate, String operation) {
