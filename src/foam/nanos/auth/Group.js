@@ -311,6 +311,30 @@ foam.CLASS({
       `
     },
     {
+      name: 'checkGlobalRead',
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        String permissionId = "group.read.*";
+        try {
+          return auth.check(x, permissionId);
+        } catch ( Exception e ) {
+          return false;
+        } 
+      `
+    },
+    {
+      name: 'checkGlobalRemove',
+      javaCode: `
+        AuthService auth = (AuthService) x.get("auth");
+        String permissionId = "group.remove.*";
+        try {
+          return auth.check(x, permissionId);
+        } catch ( Exception e ) {
+          return false;
+        } 
+      `
+    },
+    {
       name: 'checkUserHasAllPermissionsInGroupAndAncestors',
       type: 'Void',
       args: [
