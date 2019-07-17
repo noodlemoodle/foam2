@@ -216,7 +216,7 @@ if ( getAuthorize() ) {
     getX(), 
     getAuthorizeRead(), 
     delegate, 
-    new foam.nanos.auth.StandardAuthorizer(getPermissionPrefix())
+    foam.nanos.auth.StandardAuthorizer.instance(getPermissionPrefix())
     );
 }
 

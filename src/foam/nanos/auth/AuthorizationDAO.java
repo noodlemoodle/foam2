@@ -29,10 +29,6 @@ public class AuthorizationDAO extends ProxyDAO {
   }
 
   public AuthorizationDAO(X x, boolean authorizeRead, DAO delegate, Authorizer authorizer) {
-    this(x, authorizeRead, delegate, authorizer);
-  }
-
-  public AuthorizationDAO(X x, boolean authorizeRead, DAO delegate, Authorizer authorizer) {
     AuthorizationException exception = new AuthorizationException("When " +
         "using a DAO decorated by AuthenticatedDAO, you may only call the " +
         "context-oriented methods: put_(), find_(), select_(), remove_(), " +
@@ -77,7 +73,7 @@ public class AuthorizationDAO extends ProxyDAO {
 
   @Override
   public Sink select_(X x, Sink sink, long skip, long limit, Comparator order, Predicate predicate) {
-    if ( authorizeRead_ && ! authorizer.checkGlobalRead(x)) {
+    if ( authorizeRead_ && ! authorizer_.checkGlobalRead(x)) {
       super.select_(x, sink, skip, limit, order, augmentPredicate(x, predicate, "read"));
       return sink;
     }
@@ -86,8 +82,8 @@ public class AuthorizationDAO extends ProxyDAO {
 
   @Override
   public void removeAll_(X x, long skip, long limit, Comparator order, Predicate predicate) {
-    if( authorizer.checkGlobalRemove(x) ) {
-      this.select_(x, new RemoveSink(x, this), skip, limit, order, predicate));
+    if( authorizer_.checkGlobalRemove(x) ) {
+      this.select_(x, new RemoveSink(x, this), skip, limit, order, predicate);
     } else {
       this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));
     }

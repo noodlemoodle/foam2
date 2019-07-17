@@ -78,6 +78,7 @@ foam.CLASS({
       name: 'checkGlobalRead',
       javaCode: `
       // It's fine for anyone to see how permissions relate to groups.
+      return true;
       `
     },
     {

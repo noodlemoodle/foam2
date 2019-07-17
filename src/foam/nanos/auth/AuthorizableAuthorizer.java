@@ -46,16 +46,16 @@ public class AuthorizableAuthorizer implements Authorizer {
   }
 
   public boolean checkGlobalRead(X x) {
-    if ( obj instanceof Authorizable ) {
-      return ((Authorizable) obj).checkGlobalRead(x);
-    }
+    // if ( obj instanceof Authorizable ) {
+    //   return ((Authorizable) obj).checkGlobalRead(x);
+    // }
     return false;
   }
 
   public boolean checkGlobalRemove(X x) {
-    if ( obj instanceof Authorizable ) {
-      return ((Authorizable) obj).checkGlobalRemove(x);
-    }
+    // if ( obj instanceof Authorizable ) {
+    //   return ((Authorizable) obj).checkGlobalRemove(x);
+    // }
     return false;
   }
 }

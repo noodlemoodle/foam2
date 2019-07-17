@@ -48,13 +48,15 @@ foam.INTERFACE({
       name: 'checkGlobalRead',
       args: [
         { name: 'x', type: 'Context' }
-      ]
+      ],
+      type: 'Boolean'
     },
     {
-      name: 'checkGlobalRead',
+      name: 'checkGlobalRemove',
       args: [
         { name: 'x', type: 'Context' }
-      ]
+      ],
+      type: 'Boolean'
     }
 
   ]

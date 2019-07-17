@@ -498,7 +498,7 @@ foam.CLASS({
       javaCode: `
         AuthService auth = (AuthService) x.get("auth");
         String permissionId = "user.read.*";
-        String spidPermissionId = "spid.read.*"
+        String spidPermissionId = "spid.read.*";
         try {
           return auth.check(x, permissionId) || auth.check(x, spidPermissionId);
         } catch ( Exception e ) {
@@ -511,7 +511,7 @@ foam.CLASS({
       javaCode: `
         AuthService auth = (AuthService) x.get("auth");
         String permissionId = "user.delete.*";
-        String spidPermissionId = "spid.delete.*"
+        String spidPermissionId = "spid.delete.*";
         try {
           return auth.check(x, permissionId) || auth.check(x, spidPermissionId);
         } catch ( Exception e ) {
