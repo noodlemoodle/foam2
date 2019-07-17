@@ -43,6 +43,19 @@ foam.INTERFACE({
         { name: 'x', type: 'Context' }
       ],
       javaThrows: ['foam.nanos.auth.AuthorizationException']
+    },
+    {
+      name: 'checkGlobalRead',
+      args: [
+        { name: 'x', type: 'Context' }
+      ]
+    },
+    {
+      name: 'checkGlobalRead',
+      args: [
+        { name: 'x', type: 'Context' }
+      ]
     }
+
   ]
 });
