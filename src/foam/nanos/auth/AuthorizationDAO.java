@@ -94,5 +94,14 @@ public class AuthorizationDAO extends ProxyDAO {
       ) :
       HAS_PERMISSION(x, createPermission(operation));
   }
+
+  public Predicate augmentPredicate(X x, Predicate existingPredicate, String operation) {
+    return existingPredicate != null ?
+      AND(
+        HAS_PERMISSION(x, name_ + "." + operation + ".*"),
+        existingPredicate
+      ) : 
+      HAS_PERMISSION(x, name_ + "." + operation + ".*");
+  }
 }
 
