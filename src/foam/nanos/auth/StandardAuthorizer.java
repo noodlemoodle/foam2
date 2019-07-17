@@ -20,12 +20,10 @@ public class StandardAuthorizer implements Authorizer {
   }
 
   public String createPermission(String op) {
-    System.out.println("!!!!!" + name + "." + op);
     return name + "." + op;
   }
 
   public String createPermission(String op, Object id) {
-    System.out.println("!!!!!" + name + "." + op + "." + id);
     return name + "." + op + "." + id;
   }
 
@@ -74,25 +72,23 @@ public class StandardAuthorizer implements Authorizer {
   }
 
   public boolean checkGlobalRead(X x) {
-    // String permission = createPermission("read");
-    // AuthService authService = (AuthService) x.get("auth");
-    // try {
-    //   return authService.check(x, permission);
-    // } catch ( Exception e ) {
-    //   return false;
-    // }
-    return false;
+    String permission = createPermission("read");
+    AuthService authService = (AuthService) x.get("auth");
+    try {
+      return authService.check(x, permission);
+    } catch ( Exception e ) {
+      return false;
+    }
   }
 
   public boolean checkGlobalRemove(X x) {
-    // String permission = createPermission("remove");
-    // AuthService authService = (AuthService) x.get("auth");
-    // try {
-    //   return authService.check(x, permission);
-    // } catch ( Exception e ) {
-    //   return false;
-    // }
-    return false;
+    String permission = createPermission("remove");
+    AuthService authService = (AuthService) x.get("auth");
+    try {
+      return authService.check(x, permission);
+    } catch ( Exception e ) {
+      return false;
+    }
 
   }
 }
