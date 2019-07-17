@@ -214,9 +214,8 @@ if ( getOrder() != null &&
 if ( getAuthorize() ) {
   delegate = new foam.nanos.auth.AuthorizationDAO(
     getX(), 
-    getAuthorizeRead(), 
     delegate, 
-    foam.nanos.auth.StandardAuthorizer.instance(getPermissionPrefix())
+    new foam.nanos.auth.StandardAuthorizer(getPermissionPrefix())
     );
 }
 
@@ -300,12 +299,6 @@ return delegate;
       class: 'Boolean',
       name: 'authorize',
       value: false
-    },
-    {
-      /** Enable standard read authentication. */
-      class: 'Boolean',
-      name: 'authorizeRead',
-      value: true
     },
     {
       class: 'Boolean',

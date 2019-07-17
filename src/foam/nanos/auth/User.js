@@ -494,32 +494,6 @@ foam.CLASS({
       `
     },
     {
-      name: 'checkGlobalRead',
-      javaCode: `
-        AuthService auth = (AuthService) x.get("auth");
-        String permissionId = "user.read.*";
-        String spidPermissionId = "spid.read.*";
-        try {
-          return auth.check(x, permissionId) || auth.check(x, spidPermissionId);
-        } catch ( Exception e ) {
-          return false;
-        } 
-      `
-    },
-    {
-      name: 'checkGlobalRemove',
-      javaCode: `
-        AuthService auth = (AuthService) x.get("auth");
-        String permissionId = "user.delete.*";
-        String spidPermissionId = "spid.delete.*";
-        try {
-          return auth.check(x, permissionId) || auth.check(x, spidPermissionId);
-        } catch ( Exception e ) {
-          return false;
-        } 
-      `
-    },
-    {
       name: 'toSummary',
       code: function() {
         return this.label();

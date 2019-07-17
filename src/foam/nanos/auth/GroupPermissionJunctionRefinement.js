@@ -73,25 +73,6 @@ foam.CLASS({
           throw new AuthorizationException(LACKS_PERMISSION);
         }
       `
-    },
-    {
-      name: 'checkGlobalRead',
-      javaCode: `
-      // It's fine for anyone to see how permissions relate to groups.
-      return true;
-      `
-    },
-    {
-      name: 'checkGlobalRemove',
-      javaCode: `
-        AuthService auth = (AuthService) x.get("auth");
-        String permissionId = "group.update.*";
-        try {
-          return auth.check(x, permissionId) && auth.check(x, getTargetId());
-        } catch ( Exception e ) {
-          return false;
-        } 
-      `
     }
   ]
 });

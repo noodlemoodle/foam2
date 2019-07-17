@@ -20,4 +20,5 @@ public interface Authorizer {
   void authorizeOnDelete(X x, FObject obj) throws AuthorizationException;
   boolean checkGlobalRead(X x);
   boolean checkGlobalRemove(X x);
+  String getName();
 }

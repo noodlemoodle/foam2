@@ -13,26 +13,24 @@ import foam.nanos.auth.AuthorizationException;
 
 public class StandardAuthorizer implements Authorizer {
 
-  private static StandardAuthorizer instance_ = null;
-  protected String  name_;
+  private String name;
 
-  public static StandardAuthorizer instance(String name) {
-    if ( instance_ == null ) {
-      instance_ = new StandardAuthorizer(name);
-    }
-    return instance_;
-  }
-
-  private StandardAuthorizer(String name) {
-    this.name_ = name;
+  public StandardAuthorizer(String name) {
+    this.name = name;
   }
 
   public String createPermission(String op) {
-    return name_ + "." + op + ".*";
+    System.out.println("!!!!!" + name + "." + op);
+    return name + "." + op;
   }
 
   public String createPermission(String op, Object id) {
-    return name_ + "." + op + "." + id + ".*";
+    System.out.println("!!!!!" + name + "." + op + "." + id);
+    return name + "." + op + "." + id;
+  }
+
+  public String getName() {
+    return this.name;
   }
 
   public void authorizeOnCreate(X x, FObject obj) throws AuthorizationException {
@@ -76,23 +74,25 @@ public class StandardAuthorizer implements Authorizer {
   }
 
   public boolean checkGlobalRead(X x) {
-    String permission = createPermission("read");
-    AuthService authService = (AuthService) x.get("auth");
-    try {
-      return authService.check(x, permission);
-    } catch ( Exception e ) {
-      return false;
-    }
+    // String permission = createPermission("read");
+    // AuthService authService = (AuthService) x.get("auth");
+    // try {
+    //   return authService.check(x, permission);
+    // } catch ( Exception e ) {
+    //   return false;
+    // }
+    return false;
   }
 
   public boolean checkGlobalRemove(X x) {
-    String permission = createPermission("remove");
-    AuthService authService = (AuthService) x.get("auth");
-    try {
-      return authService.check(x, permission);
-    } catch ( Exception e ) {
-      return false;
-    }
+    // String permission = createPermission("remove");
+    // AuthService authService = (AuthService) x.get("auth");
+    // try {
+    //   return authService.check(x, permission);
+    // } catch ( Exception e ) {
+    //   return false;
+    // }
+    return false;
 
   }
 }

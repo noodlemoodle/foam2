@@ -22,13 +22,8 @@ import static foam.mlang.MLang.HAS_PERMISSION;
  */
 public class AuthorizationDAO extends ProxyDAO {
   protected Authorizer authorizer_;
-  protected boolean authorizeRead_;
 
   public AuthorizationDAO(X x, DAO delegate, Authorizer authorizer) {
-    this(x, true, delegate, authorizer);
-  }
-
-  public AuthorizationDAO(X x, boolean authorizeRead, DAO delegate, Authorizer authorizer) {
     AuthorizationException exception = new AuthorizationException("When " +
         "using a DAO decorated by AuthenticatedDAO, you may only call the " +
         "context-oriented methods: put_(), find_(), select_(), remove_(), " +
@@ -37,7 +32,6 @@ public class AuthorizationDAO extends ProxyDAO {
     setX(new InvalidX(exception));
     setDelegate(delegate);
     authorizer_ = authorizer;
-    authorizeRead_ = authorizeRead;
   }
 
   @Override
@@ -67,13 +61,13 @@ public class AuthorizationDAO extends ProxyDAO {
   public FObject find_(X x, Object id) {
     FObject obj = super.find_(x, id);
     if ( id == null || obj == null ) return null;
-    if ( authorizeRead_ ) authorizer_.authorizeOnRead(x, obj);
+    authorizer_.authorizeOnRead(x, obj);
     return obj;
   }
 
   @Override
   public Sink select_(X x, Sink sink, long skip, long limit, Comparator order, Predicate predicate) {
-    if ( authorizeRead_ && ! authorizer_.checkGlobalRead(x)) {
+    if ( ! authorizer_.checkGlobalRead(x) ) {
       super.select_(x, sink, skip, limit, order, augmentPredicate(x, predicate, "read"));
       return sink;
     }
@@ -82,10 +76,23 @@ public class AuthorizationDAO extends ProxyDAO {
 
   @Override
   public void removeAll_(X x, long skip, long limit, Comparator order, Predicate predicate) {
-    if( authorizer_.checkGlobalRemove(x) ) {
-      this.select_(x, new RemoveSink(x, this), skip, limit, order, predicate);
-    } else {
+    if( ! authorizer_.checkGlobalRemove(x) ) {
       this.select_(x, new RemoveSink(x, this), skip, limit, order, augmentPredicate(x, predicate, "delete"));
-    }
+    } 
+    this.select_(x, new RemoveSink(x, this), skip, limit, order, predicate);
+  }
+
+  public String createPermission(String op) {
+    return authorizer_.getName() + "." + op;
+  }
+
+  public Predicate augmentPredicate(X x, Predicate existingPredicate, String operation) {
+    return existingPredicate != null ?
+      AND(
+        HAS_PERMISSION(x, createPermission(operation)),
+        existingPredicate
+      ) :
+      HAS_PERMISSION(x, createPermission(operation));
   }
 }
+
