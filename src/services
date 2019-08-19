@@ -454,9 +454,11 @@ p({
   "name":"addressParser",
   "lazy":false,
   "serve":false,
-  "service":{
+  "service":"""
+  {
     "class":foam.nanos.geocode.GoogleMapsAddressParser",
   }
+  """
 })
 p({
   "class":"foam.nanos.boot.NSpec",
