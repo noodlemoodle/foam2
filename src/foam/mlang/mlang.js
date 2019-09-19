@@ -205,6 +205,9 @@ foam.CLASS({
       if ( o.class && this.__context__.lookup(o.class, true) ) {
         return this.adaptValue(this.__context__.lookup(o.class).create(o, this));
       }
+      if ( foam.core.FObject.isSubClass(o) ) {
+        return foam.mlang.Constant.create({ value: o });
+      }
 
       console.error('Invalid expression value: ', o);
     }
@@ -435,7 +438,7 @@ foam.CLASS({
       args: [
         {
           name: 'stmt',
-          javaType: 'foam.dao.pg.IndexedPreparedStatement'
+          javaType: 'foam.dao.jdbc.IndexedPreparedStatement'
         }
       ],
       javaCode: '//noop',
@@ -474,7 +477,7 @@ foam.CLASS({
       args: [
         {
           name: 'stmt',
-          javaType: 'foam.dao.pg.IndexedPreparedStatement'
+          javaType: 'foam.dao.jdbc.IndexedPreparedStatement'
         }
       ],
       javaCode: ' '
@@ -703,11 +706,16 @@ foam.CLASS({
     function toIndex(tail) {
       return this.arg1 && this.arg1.toIndex(tail);
     },
-
-    function toString() {
-      return foam.String.constantize(this.cls_.name) + '(' +
-          this.arg1.toString() + ', ' +
-          this.arg2.toString() + ')';
+    {
+      name: 'toString',
+      code: function() {
+        return foam.String.constantize(this.cls_.name) + '(' +
+            this.arg1.toString() + ', ' +
+            this.arg2.toString() + ')';
+      },
+      javaCode: `
+        return String.format("%s(%s, %s)", getClass().getSimpleName(), getArg1().toString(), getArg2().toString());
+      `
     },
     {
       name: 'prepareStatement',
@@ -1449,6 +1457,13 @@ foam.CLASS({
 
   requires: [ 'foam.mlang.Constant' ],
 
+  javaImports: [
+    'java.util.List',
+    'foam.mlang.ArrayConstant',
+    'foam.mlang.Constant',
+    'foam.mlang.predicate.False'
+  ],
+
   properties: [
     {
       name: 'arg1',
@@ -1527,7 +1542,14 @@ return false
   // boolean uppercase = lhs.getClass().isEnum(); TODO: Account for ENUMs? (See js)
   Object rhs = getArg2().f(obj);
 
-  if ( rhs instanceof Object[] ) {
+  if ( rhs instanceof List ) {
+    List list = (List) rhs;
+    for ( Object o : list ) {
+      if ( ( ( (Comparable) lhs ).compareTo( (Comparable) o ) ) == 0 ) {
+        return true;
+      }
+    }
+  } else if ( rhs instanceof Object[] ) {
     // Checks if rhs array contains the lhs object
     Object[] values = (Object[])rhs;
 
@@ -1551,12 +1573,30 @@ return false
       type: 'String',
       javaCode: 'return " " + getArg1().createStatement() + " in " + getArg2().createStatement();'
     },
+    {
+      name: 'partialEval',
+      code: function partialEval() {
+        if ( ! this.Constant.isInstance(this.arg2) ) return this;
 
-    function partialEval() {
-      if ( ! this.Constant.isInstance(this.arg2) ) return this;
+        return ( ! this.arg2.value ) || this.arg2.value.length === 0 ?
+            this.FALSE : this;
+      },
+      javaCode: `
+        if ( ! (getArg2() instanceof ArrayConstant) ) return this;
 
-      return ( ! this.arg2.value ) || this.arg2.value.length === 0 ?
-          this.FALSE : this;
+        Object[] arr = ((ArrayConstant) getArg2()).getValue();
+
+        if ( arr.length == 0 ) {
+          return new False();
+        } else if ( arr.length == 1 ) {
+          return new Eq.Builder(getX())
+            .setArg1(getArg1())
+            .setArg2(new Constant(arr[0]))
+            .build();
+        }
+
+        return this;
+      `
     }
   ]
 });
@@ -1658,6 +1698,8 @@ foam.CLASS({
     }
   ],
 
+  javaImports: [ 'java.util.Arrays' ],
+
   axioms: [
     {
       name: 'javaExtras',
@@ -1740,14 +1782,17 @@ s = s.replace(",", "\\\\,");
 builder.append(s);
 `
     },
-
-    function toString_(x) {
-      return Array.isArray(x) ? '[' + x.map(this.toString_.bind(this)).join(', ') + ']' :
-        x.toString ? x.toString :
-        x;
-    },
-
-    function toString() { return this.toString_(this.value); }
+    {
+      name: 'toString',
+      code: function() {
+        return Array.isArray(this.value) ? '[' + this.value.map(this.toString_.bind(this)).join(', ') + ']' :
+          this.value.toString ? this.value.toString :
+          x;
+      },
+      javaCode: `
+        return Arrays.toString(getValue());
+      `
+    }
   ]
 });
 
@@ -2332,13 +2377,6 @@ foam.CLASS({
   package: 'foam.mlang.sink',
   name: 'Map',
   extends: 'foam.dao.ProxySink',
-  axioms: [
-    {
-      // TODO: Remove this when MAP works properly on java.  github issue #1020
-      class: 'foam.box.Remote',
-      clientClass: 'foam.dao.ClientSink'
-    }
-  ],
 
   documentation: 'Sink Decorator which applies a map function to put() values before passing to delegate.',
 
@@ -2580,7 +2618,7 @@ foam.CLASS({
       name: 'args'
     },
     {
-      class: 'Array',
+      class: 'List',
       name: 'data',
       factory: function() { return []; }
     }
@@ -2590,7 +2628,14 @@ foam.CLASS({
       name: 'put',
       code: function put(obj) {
         this.data.push(this.args.map(a => a.f(obj)));
-      }
+      },
+      javaCode: `
+        Object[] args = new Object[getArgs().length];
+        for ( int i = 0; i < getArgs().length ; i++ ) {
+          args[i] = getArgs()[i].f(obj);
+        }
+        getData().add(args);
+      `
     }
   ]
 });
@@ -3106,6 +3151,30 @@ foam.CLASS({
 
 
 foam.CLASS({
+  package: 'foam.mlang.predicate',
+  name: 'DotF',
+  extends: 'foam.mlang.predicate.Binary',
+  implements: [ 'foam.core.Serializable' ],
+
+  documentation: `A binary predicate that evaluates arg1 as a predicate with
+    arg2 as its argument.`,
+
+  methods: [
+    {
+      name: 'f',
+      javaCode: `
+        Object predicate = getArg1().f(obj);
+        if ( predicate instanceof Predicate ) {
+          return ((Predicate) predicate).f(getArg2().f(obj));
+        }
+        return false;
+      `
+    }
+  ]
+});
+
+
+foam.CLASS({
   package: 'foam.mlang',
   name: 'PredicatedExpr',
   extends: 'foam.mlang.AbstractExpr',
@@ -3175,6 +3244,9 @@ foam.CLASS({
   methods: [
     {
       name: 'f',
+      code: function(obj) {
+        return this.targetClass.id == obj.cls_.id;
+      },
       javaCode: `
         return getTargetClass().getObjClass() == obj.getClass();
       `
@@ -3377,6 +3449,26 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.mlang',
+  name: 'CurrentTime',
+  extends: 'foam.mlang.AbstractExpr',
+  axioms: [
+    { class: 'foam.pattern.Singleton' }
+  ],
+  methods: [
+    {
+      name: 'f',
+      code: function(_) {
+        return new Date();
+      },
+      javaCode: `
+        return new java.util.Date();
+      `
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.mlang',
   name: 'StringLength',
   extends: 'foam.mlang.AbstractExpr',
   properties: [
@@ -3390,6 +3482,22 @@ foam.CLASS({
       name: 'f',
       code: function(o) { return this.arg1.f(o).length; },
       javaCode: 'return ((String) getArg1().f(obj)).length();'
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.mlang',
+  name: 'IdentityExpr',
+  extends: 'foam.mlang.AbstractExpr',
+  axioms: [
+    { class: 'foam.pattern.Singleton' }
+  ],
+  methods: [
+    {
+      name: 'f',
+      code: function(o) { return o; },
+      javaCode: 'return obj;'
     }
   ]
 });
@@ -3419,6 +3527,116 @@ try {
 return true;
       `
     }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.mlang.predicate',
+  name: 'isAuthorizedToRead',
+  extends: 'foam.mlang.predicate.AbstractPredicate',
+  implements: [ 'foam.core.Serializable' ],
+
+  documentation: 'Expression which returns true if the user has a given permission.',
+
+  javaImports: [
+    'foam.core.FObject',
+    'foam.core.X',
+    'foam.nanos.auth.AuthorizationException'
+  ],
+
+  properties: [
+    {
+      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
+      javaType: 'foam.core.X',
+      flags: ['java'],
+      name: 'userContext'
+    },
+    {
+      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
+      javaType: 'foam.nanos.auth.Authorizer',
+      flags: ['java'],
+      name: 'authorizer'
+    }
+  ],
+
+  methods: [
+    {
+      name: 'f',
+      code: function() {
+        // Authorization on the client is futile since the user has full control
+        // over the code that executes on their machine.
+        // A client-side implementation of this predicate would also have to be
+        // async in this case because we would need to access the auth service,
+        // but we don't support async predicate execution on the client as far
+        // as I'm aware.
+        return true;
+      },
+      javaCode: `
+        X x = (X) getUserContext();
+        foam.nanos.auth.Authorizer authorizer = getAuthorizer();
+        try {
+          authorizer.authorizeOnRead(x, (FObject) obj);
+        } catch ( AuthorizationException e ) {
+          return false;
+        }
+        return true;
+      `
+    },
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.mlang.predicate',
+  name: 'isAuthorizedToDelete',
+  extends: 'foam.mlang.predicate.AbstractPredicate',
+  implements: [ 'foam.core.Serializable' ],
+
+  documentation: 'Expression which returns true if the user has a given permission.',
+
+  javaImports: [
+    'foam.core.FObject',
+    'foam.core.X',
+    'foam.nanos.auth.AuthorizationException'
+  ],
+
+  properties: [
+    {
+      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
+      javaType: 'foam.core.X',
+      flags: ['java'],
+      name: 'userContext'
+    },
+    {
+      javaInfoType: 'foam.core.AbstractObjectPropertyInfo',
+      javaType: 'foam.nanos.auth.Authorizer',
+      flags: ['java'],
+      name: 'authorizer'
+    }
+  ],
+
+  methods: [
+    {
+      name: 'f',
+      code: function() {
+        // Authorization on the client is futile since the user has full control
+        // over the code that executes on their machine.
+        // A client-side implementation of this predicate would also have to be
+        // async in this case because we would need to access the auth service,
+        // but we don't support async predicate execution on the client as far
+        // as I'm aware.
+        return true;
+      },
+      javaCode: `
+        X x = (X) getUserContext();
+        foam.nanos.auth.Authorizer authorizer = getAuthorizer();
+        try {
+          authorizer.authorizeOnDelete(x, (FObject) obj);
+        } catch ( AuthorizationException e ) {
+          return false;
+        }
+        return true;
+      `
+    },
   ]
 });
 

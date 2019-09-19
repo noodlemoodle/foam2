@@ -30,16 +30,19 @@ foam.CLASS({
     'as controllerView',
     'data.selection as selection',
     'data.data as dao',
+    'data.filteredTableColumns as filteredTableColumns',
     'data.searchColumns as searchColumns',
     'dblclick'
   ],
 
   css: `
     ^ {
-      width: fit-content;
-      max-width: 100vw;
+      /* The following three lines are a cross-browser
+         equivalent to width: fit-content; in Chrome */
+      width: intrinsic;
+      width: -moz-max-content;
+      width: -webkit-max-content;
       margin: 24px auto 0 auto;
-      max-width: calc(100vw - 80px);
     }
 
     ^top-row {
@@ -53,18 +56,12 @@ foam.CLASS({
     }
 
     ^title-container > * {
-      color: %PRIMARYCOLOR%;
+      color: /*%BLACK%*/ #1e1f21;
       margin: 0;
     }
 
     ^container {
-      display: grid;
-      grid-template-columns: fit-content(100%) auto;
-      overflow-x: scroll;
-    }
-
-    ^container > * + * {
-      margin-left: 10px;
+      display: flex;
     }
 
     ^ .actions {
@@ -74,6 +71,15 @@ foam.CLASS({
 
     ^ .actions button + button {
       margin-left: 8px;
+    }
+
+    ^full-search-container {
+      flex: 0 0 250px;
+      margin-right: 10px;
+    }
+
+    ^ .foam-u2-view-TableView {
+      width: 1024px;
     }
   `,
 
@@ -122,7 +128,6 @@ foam.CLASS({
   reactions: [
     ['data', 'action.create', 'onCreate'],
     ['data', 'edit', 'onEdit'],
-    ['data', 'action.findRelatedObject', 'onFindRelated'],
     ['data', 'finished', 'onFinished'],
     ['data', 'export', 'onExport']
   ],
@@ -146,21 +151,13 @@ foam.CLASS({
                 .add(this.data.subtitle$)
               .end()
             .end()
-            .callIfElse(this.data.primaryAction, function() {
-              this.startContext({ data: self })
-                .start()
-                  .tag(self.data.primaryAction, { size: 'LARGE' })
-                .end()
-              .endContext();
+            .callIfElse(self.data.createLabel, function() {
+              this.tag(self.data.primaryAction, {
+                label$: self.data.createLabel$,
+                size: 'LARGE'
+              });
             }, function() {
-              if ( self.data.createLabel ) {
-                this.tag(self.cls.CREATE, {
-                  label$: self.data.createLabel$,
-                  size: 'LARGE'
-                });
-              } else {
-                this.start().tag(self.cls.CREATE, { size: 'LARGE' }).end();
-              }
+              this.start().tag(self.data.primaryAction, { size: 'LARGE' }).end();
             })
           .end()
           .start()
@@ -168,6 +165,7 @@ foam.CLASS({
             .callIf(this.data.searchMode === this.SearchMode.FULL, function() {
               this.start()
                 .hide(self.data.searchHidden$)
+                .addClass(self.myClass('full-search-container'))
                 .add(self.cls.PREDICATE.clone().copyFrom({
                   view: { class: 'foam.u2.view.ReciprocalSearch' }
                 }))
@@ -189,10 +187,7 @@ foam.CLASS({
                   .show(self.mode$.map((m) => m === foam.u2.DisplayMode.RW))
                   .start()
                     .forEach(self.cls.getAxiomsByClass(foam.core.Action).filter((action) => {
-                      var rtn = true;
-                      if ( ! self.primaryAction ) {
-                        rtn = rtn && action.name !== 'create';
-                      }
+                      var rtn = action.name !== self.data.primaryAction.name;
                       if ( self.data.searchMode !== self.SearchMode.FULL ) {
                         rtn = rtn && action.name !== 'toggleFilters';
                       }
@@ -206,7 +201,11 @@ foam.CLASS({
               .end()
               .start()
                 .style({ 'overflow-x': 'auto' })
-                .tag(this.summaryView, { data$: this.data.filteredDAO$ })
+                .tag(this.summaryView, {
+                  data$: this.data.filteredDAO$,
+                  multiSelectEnabled: !! this.data.relationship,
+                  selectedObjects$: this.data.selectedObjects$
+                })
               .end()
             .end()
           .end());
@@ -236,19 +235,6 @@ foam.CLASS({
         class: this.updateView.class,
         detailView: this.data.detailView,
         key: id
-      }, this);
-    },
-
-    function onFindRelated() {
-      var data = this.DAOController.create({
-        data: this.data.relationship.targetDAO,
-        addEnabled: true,
-        relationship: this.data.relationship
-      });
-
-      this.stack.push({
-        class: 'foam.comics.DAOControllerView',
-        data: data
       }, this);
     },
 

@@ -133,15 +133,18 @@ foam.CLASS({
 
         if ( ! lastClassToInstallCSSFor || lastClassToInstallCSSFor == cls ) {
           // Install CSS if not already installed in this document for this cls
-          var key = axiom.asKey(X.document, cls);
+          var key = axiom.asKey(X.document, this);
           if ( X.document && ! axiom.installedDocuments_[key] ) {
-            X.installCSS(axiom.expandCSS(this, axiom.code), cls.id);
+            X.installCSS(axiom.expandCSS(this, axiom.code), this.id);
             axiom.installedDocuments_[key] = true;
           }
         }
 
-        if ( ! lastClassToInstallCSSFor && ! cls.model_.inheritCSS ) {
-          X = X.createSubContext({lastClassToInstallCSSFor: cls, originalX: X});
+        if ( ! lastClassToInstallCSSFor && ! this.model_.inheritCSS ) {
+          X = X.createSubContext({
+            lastClassToInstallCSSFor: this,
+            originalX: X
+          });
         }
 
         if ( lastClassToInstallCSSFor && isFirstCSS ) X = X.originalX;
@@ -349,20 +352,17 @@ foam.CLASS({
       this.visitChildren('unload');
       this.detach();
     },
-    function error() {
-      throw new Error('Mutations not allowed in OUTPUT state.');
-    },
-    function onSetClass(cls, enabled) { this.error(); },
-    function onFocus(cls, enabled) { this.error(); },
-    function onAddListener(topic, listener) { this.error(); },
-    function onRemoveListener(topic, listener) { this.error(); },
-    function onSetStyle(key, value) { this.error(); },
-    function onSetAttr(key, value) { this.error(); },
-    function onRemoveAttr(key) { this.error(); },
-    function onAddChildren(c) { this.error(); },
-    function onInsertChildren() { this.error(); },
-    function onReplaceChild() { this.error(); },
-    function onRemoveChild() { this.error(); },
+    function onSetClass(cls, enabled) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onFocus(cls, enabled) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onAddListener(topic, listener) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onRemoveListener(topic, listener) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onSetStyle(key, value) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onSetAttr(key, value) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onRemoveAttr(key) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onAddChildren(c) { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onInsertChildren() { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onReplaceChild() { throw new Error('Mutations not allowed in OUTPUT state.'); },
+    function onRemoveChild() { throw new Error('Mutations not allowed in OUTPUT state.'); },
     function toString() { return 'OUTPUT'; }
   ]
 });
@@ -598,8 +598,8 @@ foam.CLASS({
     <foam class="com.acme.mypackage.MyView"></foam>
 
     // TODO: Decide if we want this or not:
-    // function XXXE(opt_nodeName /* | DIV */) {
-    //   /* Create a new Element */
+    // function XXXE(opt_nodeName // | DIV //) {
+    //   // Create a new Element
     //   var Y = this.__subContext__;
     //
     //   // ???: Is this needed / a good idea?
@@ -2129,6 +2129,10 @@ foam.CLASS({
       value: false
     },
     {
+      class: 'String',
+      name: 'placeholder'
+    },
+    {
       class: 'foam.u2.ViewSpec',
       name: 'view',
       value: { class: 'foam.u2.TextField' }
@@ -2155,6 +2159,14 @@ foam.CLASS({
       name: 'validationStyleEnabled',
       documentation: 'If true, inputs will be styled when they are in an invalid state.',
       value: true
+    },
+    {
+      class: 'Int',
+      name: 'order',
+      documentation: `
+        The order to render the property in if rendering multiple properties.
+      `,
+      value: Number.MAX_VALUE
     }
   ],
 
@@ -2386,7 +2398,12 @@ foam.CLASS({
   properties: [
     {
       name: 'view',
-      value: { class: 'foam.u2.view.FObjectArrayView' },
+      expression: function(of) {
+        return {
+          class: 'foam.u2.view.FObjectArrayView',
+          of: of
+        };
+      }
     }
   ]
 });
@@ -2467,7 +2484,7 @@ foam.CLASS({
   documentation: `
     A View is an Element used to display data.
     // TODO: Should the following be properties?
-    /*
+
     {
       type: 'Boolean',
       name: 'showValidation',
@@ -2481,7 +2498,7 @@ foam.CLASS({
       documentation: 'The actual error message. Null or the empty string ' +
           'when there is no error.',
     }
-    */
+
   `,
 
   exports: [ 'data' ],
@@ -2673,6 +2690,18 @@ foam.CLASS({
       postSet: function(_, cs) {
         this.axioms_.push(foam.u2.SearchColumns.create({columns: cs}));
       }
+    }
+  ]
+});
+
+foam.CLASS({
+  package: 'foam.u2',
+  name: 'PredicatePropertyRefine',
+  refines: 'foam.mlang.predicate.PredicateProperty',
+  properties: [
+    {
+      name: 'view',
+      value: { class: 'foam.u2.view.JSONTextView' }
     }
   ]
 });

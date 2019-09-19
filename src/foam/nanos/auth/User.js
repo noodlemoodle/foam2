@@ -62,6 +62,14 @@ foam.CLASS({
     'email'
   ],
 
+  constants: [
+    {
+      name: 'SYSTEM_USER_ID',
+      value: 1,
+      type: 'Long'
+    }
+  ],
+
   // TODO: The following properties don't have to be defined here anymore once
   // https://github.com/foam-framework/foam2/issues/1529 is fixed:
   //   1. enabled
@@ -89,6 +97,7 @@ foam.CLASS({
       class: 'Boolean',
       name: 'loginEnabled',
       documentation: 'Determines whether the User can login to the platform.',
+      permissionRequired: true,
       value: true
     },
     {
@@ -491,6 +500,12 @@ foam.CLASS({
           throw new RuntimeException("You do not have permission to delete that user.");
         }
       `
+    },
+    {
+      name: 'toSummary',
+      code: function() {
+        return this.label();
+      }
     }
   ]
 });
