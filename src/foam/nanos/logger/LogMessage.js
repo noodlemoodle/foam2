@@ -41,6 +41,8 @@ Implement LastModifiedByAware to suppress 'modified by' comment in journal outpu
       class: 'Enum',
       of: 'foam.log.LogLevel',
       toJSON: function(value) { return value && value.label; },
+      javaJSONOutput: `((foam.log.LogLevel) value).getLabel()`,
+      javaFromJSON: `return forLabel(value);`,
       visibility: 'RO',
       tableCellFormatter: function(severity, obj, axiom) {
          this

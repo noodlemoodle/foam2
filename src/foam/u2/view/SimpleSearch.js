@@ -55,11 +55,6 @@ foam.CLASS({
     },
     {
       name: 'searchManager'
-    },
-    {
-      class: 'Boolean',
-      name: 'showCount',
-      value: true
     }
   ],
 
@@ -99,12 +94,9 @@ foam.CLASS({
         .start()
           .tag(generalQueryView)
         .end()
-        .callIf(this.showCount, function() {
-          this.start('p')
-            .add(self.countText$)
-          .end();
-        });
-
+        .start('p')
+          .add(self.countText$)
+        .end();
     }
   ],
 

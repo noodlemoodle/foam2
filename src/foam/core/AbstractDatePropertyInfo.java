@@ -69,11 +69,7 @@ public abstract class AbstractDatePropertyInfo
 
   @Override
   public void toJSON(foam.lib.json.Outputter outputter, Object value) {
-    if ( value == null ) {
-      outputter.output(null);
-    } else {
-      outputter.outputDateValue((Date)value);
-    }
+    outputter.outputDateValue((Date)value);
   }
 
   @Override

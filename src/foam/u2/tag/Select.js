@@ -9,10 +9,6 @@ foam.CLASS({
   name: 'Select',
   extends: 'foam.u2.View',
 
-  axioms: [
-    { class: 'foam.u2.TextInputCSS' }
-  ],
-
   css: `
     ^:disabled {
       appearance: none;

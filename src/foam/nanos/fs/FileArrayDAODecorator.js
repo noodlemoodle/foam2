@@ -23,18 +23,27 @@ foam.CLASS({
   methods: [
     function write(X, dao, obj, existing) {
       var self = this;
+      var i = 0;
       var props = obj.cls_.getAxiomsByClass(foam.nanos.fs.FileArray);
 
-      var promises = props.map((prop) => {
-        var files = prop.f(obj);
-        return Promise.all(files.map((f) => self.fileDAO.put(f)));
-      });
+      return Promise.resolve().then(function a() {
+        var prop = props[i++];
 
-      return Promise.all(promises).then((values) => {
-        props.forEach((prop, i) => {
-          prop.set(obj, values[i]);
+        if ( ! prop ) return obj;
+
+        var files = prop.f(obj);
+
+        if ( ! files ) return a();
+
+        var promiseList = [];
+        for ( var j = 0 ; j < files.length ; j++ ) {
+          promiseList.push(self.fileDAO.put(files[j]));
+        }
+
+        return Promise.all(promiseList).then(function (b) {
+          prop.set(obj, b);
+          return a();
         });
-        return obj;
       });
     }
   ]

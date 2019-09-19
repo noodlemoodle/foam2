@@ -10,15 +10,13 @@ foam.CLASS({
   requires: [
     'foam.flow.Document'
   ],
-  javaImports: [
-    'foam.nanos.fs.Storage',
-    'java.nio.charset.StandardCharsets',
-    'java.util.Set',
-    'java.io.OutputStream'
-  ],
   documentation: 'Loads/stores documentation models from a directory of HTML markup.  Useful for saving and editing documentation in a version control repository.',
   extends: 'foam.dao.AbstractDAO',
   properties: [
+    {
+      class: 'String',
+      name: 'dir'
+    },
     {
       name: 'of',
       javaFactory: 'return foam.flow.Document.getOwnClassInfo();'
@@ -26,43 +24,44 @@ foam.CLASS({
     {
       name: 'delegate',
       javaFactory: 'return new foam.dao.MDAO.Builder(getX()).build();'
-    },
-    {
-      class: 'Object',
-      name: 'storage',
-      javaType: 'foam.nanos.fs.Storage',
-      javaFactory: `
-return new foam.nanos.fs.FallbackStorage(
-  new foam.nanos.fs.FileSystemStorage(System.getProperty("DOCUMENT_HOME")),
-  new foam.nanos.fs.ResourceStorage("documents")
-);`
     }
   ],
   methods: [
     {
       name: 'select_',
       javaCode: `
-Storage storage = getStorage();
-
 sink = prepareSink(sink);
 
 foam.dao.Sink         decorated = decorateSink_(sink, skip, limit, order, predicate);
 foam.dao.Subscription sub       = new foam.dao.Subscription();
 
-Set<String> paths = storage.getAvailableFiles("", "*.flow");
+java.nio.file.FileSystem fs = java.nio.file.FileSystems.getDefault();
+java.nio.file.DirectoryStream<java.nio.file.Path> contents;
 
-for ( String path : paths ) {
+try {
+  contents = java.nio.file.Files.newDirectoryStream(fs.getPath(getDir()), "*.flow");
+} catch ( java.io.IOException e ) {
+  throw new RuntimeException(e);
+}
+
+for ( java.nio.file.Path path : contents ) {
   if ( sub.getDetached() ) break;
 
+
   foam.flow.Document obj = new foam.flow.Document();
-  String id = path.substring(0, path.lastIndexOf(".flow"));
+  String id = path.getFileName().toString().substring(0, path.getFileName().toString().lastIndexOf(".flow"));
 
   obj.setId(id);
 
   // TODO: We could parse the markup on the server to get the embedded title.
 
-  obj.setMarkup(new String(storage.getBytes(path), StandardCharsets.UTF_8));
-  decorated.put(obj, sub);
+  try {
+    byte[] data = java.nio.file.Files.readAllBytes(path);
+    obj.setMarkup(new String(data, java.nio.charset.Charset.forName("UTF-8")));
+    decorated.put(obj, sub);
+  } catch(java.io.IOException e) {
+    e.printStackTrace();
+  }
 }
 
 decorated.eof();
@@ -83,19 +82,13 @@ if ( ! id.matches("^[a-zA-Z0-9_-]+$") ) {
     {
       name: 'put_',
       javaCode: `
-Storage storage = getStorage();
+verifyId(((String)getPK(obj)));
 
-String id = (String)getPK(obj);
-verifyId(id);
-
-OutputStream oStream = storage.getOutputStream(id + ".flow");
-
-if ( oStream == null ) {
-  return obj;
-}
+java.nio.file.FileSystem fs = java.nio.file.FileSystems.getDefault();
 
 try {
-  oStream.write(((foam.flow.Document)obj).getMarkup().getBytes(StandardCharsets.UTF_8));
+  java.nio.file.Path path = fs.getPath(getDir(), ((String)getPK(obj)) + ".flow");
+  java.nio.file.Files.write(path, ((foam.flow.Document)obj).getMarkup().getBytes(java.nio.charset.Charset.forName("UTF-8")));
 } catch ( java.io.IOException e ) {
   throw new RuntimeException(e);
 }
@@ -104,23 +97,38 @@ return obj;`
     },
     {
       name: 'remove_',
-      javaCode: `throw new UnsupportedOperationException("Can't remove on DocumentationFolderDAO");`
+      javaCode: `java.nio.file.FileSystem fs = java.nio.file.FileSystems.getDefault();
+java.nio.file.Path path = fs.getPath(getDir(), ((String)getPK(obj)) + ".flow");
+try {
+  java.nio.file.Files.deleteIfExists(path);
+} catch ( java.io.IOException e ) {
+  throw new RuntimeException(e);
+}
+
+return obj;`
     },
     {
       name: 'find_',
-      javaCode: `
-// TODO: Escape/sanitize file name
+      javaCode: `// TODO: Escape/sanitize file name
 verifyId((String)id);
 
-Storage storage = getStorage();
-String path = (String)id + ".flow";
+java.nio.file.FileSystem fs = java.nio.file.FileSystems.getDefault();
+java.nio.file.Path path = fs.getPath(getDir(), ((String)id) + ".flow");
+if ( ! java.nio.file.Files.isReadable(path) ) return null;
 
 foam.flow.Document obj = new foam.flow.Document();
 obj.setId((String)id);
 
 // TODO: We could parse the markup on the server to get the embedded title.
 
-obj.setMarkup(new String(storage.getBytes(path), StandardCharsets.UTF_8));
+try {
+  byte[] data = java.nio.file.Files.readAllBytes(path);
+  obj.setMarkup(new String(data, java.nio.charset.Charset.forName("UTF-8")));
+} catch(java.io.IOException e) {
+  e.printStackTrace();
+  return null;
+}
+
 
 return obj;`
     }

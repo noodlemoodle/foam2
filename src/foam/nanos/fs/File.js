@@ -36,6 +36,7 @@ foam.CLASS({
       name: 'data',
       documentation: 'File data',
       /**
+       * See: https://github.com/nanoPayinc/NANOPAY/issues/4068
        * When we export this as the CSV, we are trying to create a new object if this property is undefined.
        * But because this 'Blob' is an interface, we can not instantiate it.
        *

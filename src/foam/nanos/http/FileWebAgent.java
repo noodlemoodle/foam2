@@ -121,17 +121,7 @@ public class FileWebAgent
   }
 
   @Override
-  public NSpec getNSpec() {
-    return this.nspec_;
-  }
-
-  @Override
   public void setNSpec(NSpec spec) {
     this.nspec_ = spec;
-  }
-
-  @Override
-  public void clearNSpec() {
-    this.nspec_ = null;
   }
 }

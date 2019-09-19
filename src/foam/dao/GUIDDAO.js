@@ -29,12 +29,6 @@ foam.CLASS({
     of 'id'.
   */},
 
-  javaImports: [
-    'java.util.concurrent.ThreadLocalRandom',
-    'java.util.Random',
-    'java.util.UUID'
-  ],
-
   properties: [
     {
       /** The property to set with a random GUID value, if not already set
@@ -69,8 +63,7 @@ return (foam.core.PropertyInfo)(getOf().getAxiomByName(getProperty()));
 Object val = obj.getProperty(getProperty());
 
 if ( "".equals(val) ) {
-  Random r = ThreadLocalRandom.current();
-  getAxiom().set(obj, new UUID(r.nextLong(), r.nextLong()).toString());
+  getAxiom().set(obj, java.util.UUID.randomUUID().toString());
 }
 
 return getDelegate().put_(x, obj);
@@ -83,6 +76,7 @@ return getDelegate().put_(x, obj);
       buildJavaClass: function(cls) {
         cls.extras.push(`
 public GUIDDAO(DAO delegate) {
+  System.err.println("Direct constructor use is deprecated. Use Builder instead.");
   setDelegate(delegate);
 }
         `);

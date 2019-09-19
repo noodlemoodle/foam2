@@ -42,7 +42,6 @@ foam.CLASS({
         return foam.u2.view.ChoiceView.create({
           dao: X.nSpecDAO
             .where(E.ENDS_WITH(foam.nanos.boot.NSpec.ID, 'DAO'))
-            .where(E.EQ(foam.nanos.boot.NSpec.SERVE, E.TRUE))
             .orderBy(foam.nanos.boot.NSpec.ID),
           objToChoice: function(nspec) {
             return [nspec.id, nspec.id];
@@ -77,7 +76,7 @@ foam.CLASS({
       name: 'email'
     },
     {
-      class: 'String',
+      class: 'EMail',
       displayWidth: 100,
       name: 'subject'
     },

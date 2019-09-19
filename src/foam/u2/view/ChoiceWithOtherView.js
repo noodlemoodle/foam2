@@ -66,8 +66,7 @@ foam.CLASS({
     ['', 'propertyChange.choiceData_', 'toData'],
     ['', 'propertyChange.otherData_', 'toData'],
     ['', 'propertyChange.data', 'fromData'],
-    ['', 'propertyChange.choiceView_', 'fromData'],
-    ['choiceView_', 'propertyChange.choices', 'fromData'],
+    ['', 'propertyChange.choiceView_', 'fromData']
   ],
   listeners: [
     {

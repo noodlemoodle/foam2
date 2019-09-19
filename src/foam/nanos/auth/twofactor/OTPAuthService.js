@@ -12,14 +12,18 @@ foam.INTERFACE({
 
   methods: [
     {
-      name: 'generateKeyAndQR',
+      name: 'generateKey',
       async: true,
-      type: 'foam.nanos.auth.twofactor.OTPKey',
+      type: 'String',
       javaThrows: [ 'foam.nanos.auth.AuthenticationException' ],
       args: [
         {
           name: 'x',
           type: 'Context'
+        },
+        {
+          name: 'generateQrCode',
+          type: 'Boolean'
         }
       ]
     },

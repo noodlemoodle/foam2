@@ -16,8 +16,7 @@ foam.CLASS({
   ],
 
   requires: [
-    'foam.u2.ModalHeader',
-    'foam.u2.layout.Cols',
+    'foam.u2.ModalHeader'
   ],
 
   properties: [
@@ -63,19 +62,12 @@ foam.CLASS({
       border: solid 1px #59A5D5;
     }
     ^ .label{
-      margin: 10px 0px 0px 25px;
+      margin-top: 10px;
     }
     ^ .note {
       height: 150px;
       width: 398px;
       margin-left: 25px;
-    }
-    ^buttons {
-      padding: 12px;
-    }
-
-    ^ .foam-u2-ActionView-primary {
-      margin: 12px;
     }
   `,
 
@@ -94,10 +86,8 @@ foam.CLASS({
           .start(this.DATA_TYPE).end()
           .start().addClass('label').add('Response').end()
           .start(this.NOTE).addClass('input-box').addClass('note').end()
-          .start(this.Cols).style({ 'justify-content': 'flex-start' }).addClass(this.myClass('buttons'))
-            .start(this.DOWNLOAD_CSV).end()
-            .start(this.CONVERT).end()
-          .end()
+          .start(this.DOWNLOAD_CSV).addClass('blue-button').addClass('btn').end()
+          .start(this.CONVERT).addClass('blue-button').addClass('btn').end()
         .end()
       .endContext();
     }
@@ -105,40 +95,31 @@ foam.CLASS({
 
   actions: [
     async function convert() {
-      if ( ! this.exportData && ! this.exportObj ) {
-        console.log('Neither exportData nor exportObj exist');
-        return;
-      }
-
       var exportDriver = await this.exportDriverRegistryDAO.find(this.dataType);
       exportDriver = foam.lookup(exportDriver.driverName).create();
 
-      this.note = this.exportData 
-                    ? await exportDriver.exportDAO(this.__context__, this.exportData)
-                    : await exportDriver.exportFObject(this.__context__, this.exportObj);
+      if ( this.exportData ) {
+        this.note = await exportDriver
+          .exportDAO(this.__context__, this.exportData);
+      } else {
+        this.note = await exportDriver
+          .exportFObject(this.__context__, this.exportObj);
+      }
     },
 
     async function downloadCSV() {
-      if ( ! this.exportData && ! this.exportObj ) {
-        console.log('Neither exportData nor exportObj exist');
-        return;
-      }
-
       var exportDriver = await this.exportDriverRegistryDAO.find(this.dataType);
       exportDriver = foam.lookup(exportDriver.driverName).create();
 
-      var p = this.exportData 
-                ? exportDriver.exportDAO(this.__context__, this.exportData)
-                : Promise.resolve(exportDriver.exportFObject(this.__context__, this.exportObj));
-
-      p.then(result => {
-        result = 'data:text/csv;charset=utf-8,' + result;
-        var link = document.createElement('a');
-        link.setAttribute('href', encodeURI(result));
-        link.setAttribute('download', 'data.csv');
-        document.body.appendChild(link);
-        link.click();
-      })
+      exportDriver.exportDAO(this.__context__, this.exportData)
+        .then(function(result) {
+          result = 'data:text/csv;charset=utf-8,' + result;
+          var link = document.createElement('a');
+          link.setAttribute('href', encodeURI(result));
+          link.setAttribute('download', 'data.csv');
+          document.body.appendChild(link);
+          link.click();
+        });
     }
   ]
 

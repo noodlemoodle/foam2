@@ -101,6 +101,14 @@ foam.CLASS({
     },
     {
       class: 'Boolean',
+      name: 'addEnabled',
+      documentation: `
+        True to enable the Add button for adding to a relationship.
+      `,
+      value: false
+    },
+    {
+      class: 'Boolean',
       name: 'exportEnabled',
       documentation: 'True to enable the export button.',
       value: true
@@ -128,6 +136,7 @@ foam.CLASS({
       var view = {
         class: 'foam.comics.BrowserView',
         data: X[this.daoKey],
+        addEnabled: this.addEnabled,
         createEnabled: this.createEnabled,
         detailView: this.detailView,
         editEnabled: this.editEnabled,

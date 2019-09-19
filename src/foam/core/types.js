@@ -249,25 +249,6 @@ foam.CLASS({
 
 foam.CLASS({
   package: 'foam.core',
-  name: 'Duration',
-  extends: 'Long',
-
-  documentation: `
-    A length of time in milliseconds. Further refined in TableCellFormatter.js
-    to make values human-readable when displayed in tables.
-  `,
-
-  properties: [
-    {
-      name: 'units',
-      value: 'ms'
-    }
-  ]
-});
-
-
-foam.CLASS({
-  package: 'foam.core',
   name: 'Object',
   extends: 'Property',
   documentation: '',
@@ -633,13 +614,6 @@ foam.CLASS({
       }
     },
     {
-      class: 'String',
-      name: 'unauthorizedTargetDAOKey',
-      documentation: `
-        Can be provided to use unauthorized local DAOs when the context user is the SYSTEM USER.
-      `
-    },
-    {
       name: 'adapt',
       value: function(oldValue, newValue, prop) {
         return prop.of.isInstance(newValue) ?
@@ -650,7 +624,7 @@ foam.CLASS({
     {
       name: 'value',
       expression: function(of) {
-        return of ? of.ID.value : null;
+        if ( of ) return of.ID.value;
       }
     }
   ],
@@ -661,7 +635,7 @@ foam.CLASS({
       var self = this;
       Object.defineProperty(proto, self.name + '$find', {
         get: function classGetter() {
-          return this.__subContext__[self.targetDAOKey].find(this[self.name]);
+          return this.__context__[self.targetDAOKey].find(this[self.name]);
         },
         configurable: true
       });

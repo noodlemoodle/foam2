@@ -61,7 +61,7 @@ foam.CLASS({
         return X.data.slot(function(result) {
           return foam.u2.TextField.create({
             mode: foam.u2.DisplayMode.RO,
-            data: result ? result.toString() : ''
+            data: result.toString()
           });
         });
       }

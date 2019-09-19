@@ -24,7 +24,7 @@ public class DAOResourceLoader
 {
   public static EmailTemplate findTemplate(X x, String name, String groupId) {
     DAO groupDAO = (DAO) x.get("groupDAO");
-    DAO emailTemplateDAO = (DAO) x.get("localEmailTemplateDAO");
+    DAO emailTemplateDAO = (DAO) x.get("emailTemplateDAO");
 
     do {
       Sink sink = emailTemplateDAO.where(AND(

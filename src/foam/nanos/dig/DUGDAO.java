@@ -12,6 +12,7 @@ import foam.core.X;
 import foam.dao.AbstractSink;
 import foam.dao.DAO;
 import foam.dao.ProxyDAO;
+import foam.dao.java.JDAO;
 import foam.nanos.auth.User;
 import foam.nanos.logger.Logger;
 import foam.util.Auth;
@@ -21,21 +22,16 @@ public class DUGDAO
   extends ProxyDAO
 {
   public DUGDAO(X x) {
-    setX(x);
+    this(x, new JDAO(x, DUG.getOwnClassInfo(), "dugs"));
   }
 
   public DUGDAO(X x, DAO delegate) {
-    setX(x);
-    setDelegate(delegate);
-  }
-
-  public void setDelegate(DAO delegate) {
-    super.setDelegate(delegate);
+    super(x, delegate);
 
     delegate.select(new AbstractSink() {
       @Override
       public void put(Object obj, Detachable sub) {
-        executeDUG(getX(), (DUG) obj);
+        executeDUG(x, (DUG) obj);
       }
     });
   }

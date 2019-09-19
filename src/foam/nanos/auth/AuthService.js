@@ -128,6 +128,22 @@ foam.INTERFACE({
       ]
     },
     {
+      name: 'checkPermission',
+      async: true,
+      type: 'Boolean',
+      swiftThrows: true,
+      args: [
+        {
+          name: 'x',
+          type: 'Context'
+        },
+        {
+          name: 'permission',
+          javaType: 'java.security.Permission',
+        }
+      ]
+    },
+    {
       name: 'check',
       async: true,
       type: 'Boolean',

@@ -10,8 +10,8 @@ foam.CLASS({
   ids: ['closeTime', 'key'],
   tableColumns: [
     'key',
-    'openValueTime',
-    'closeValueTime',
+    'openTime',
+    'closeTime',
     'open',
     'close',
     'min',
@@ -21,62 +21,53 @@ foam.CLASS({
   properties: [
     {
       class: 'Object',
-      name: 'key',
-      visibility: 'RO',
-      tableWidth: '350'
+      name: 'key'
     },
     {
       class: 'Float',
-      name: 'min',
-      visibility: 'RO'
+      name: 'min'
     },
     {
       class: 'Float',
-      name: 'max',
-      visibility: 'RO'
+      name: 'max'
+    },
+    {
+      class: 'DateTime',
+      name: 'openTime'
     },
     {
       class: 'Float',
-      name: 'open',
-      visibility: 'RO'
+      name: 'open'
     },
     {
       class: 'DateTime',
       name: 'openValueTime',
-      visibility: 'RO',
-      tableWidth: 150
-    },
-    {
-      class: 'DateTime',
-      name: 'closeTime',
-      visibility: 'RO',
-      tableWidth: 150
-    },
-    {
-      class: 'Float',
-      name: 'close',
       hidden: true
     },
     {
       class: 'DateTime',
+      name: 'closeTime'
+    },
+    {
+      class: 'Float',
+      name: 'close'
+    },
+    {
+      class: 'DateTime',
       name: 'closeValueTime',
-      visibility: 'RO',
-      tableWidth: 150
+      hidden: true
     },
     {
       class: 'Float',
-      name: 'total',
-      visibility: 'RO'
+      name: 'total'
     },
     {
       class: 'Float',
-      name: 'count',
-      visibility: 'RO'
+      name: 'count'
     },
     {
       class: 'Float',
       name: 'average',
-      visibility: 'RO',
       transient: true,
       javaGetter: 'return getCount() > 0 ? getTotal() / getCount() : 0;',
       expression: function(total, count) {

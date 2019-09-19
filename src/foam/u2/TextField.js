@@ -20,19 +20,10 @@ foam.CLASS({
   name: 'TextField',
   extends: 'foam.u2.tag.Input',
 
-  axioms: [
-    { class: 'foam.u2.TextInputCSS' }
-  ],
-
   css: `
-    input[type="search"] {
-      -webkit-appearance: textfield !important;
-    }
-
-    ^:read-only {
-      border: none;
-      background: rgba(0,0,0,0);
-    }
+    .foam-u2-TextField.error { outline: 1px solid red; border: 1px solid red; }
+    input[type="search"] { -webkit-appearance: textfield !important; }
+    ^:read-only { border: none; background: rgba(0,0,0,0); }
   `,
 
   properties: [
@@ -45,10 +36,6 @@ foam.CLASS({
   methods: [
     function fromProperty(prop) {
       this.SUPER(prop);
-
-      if ( ! this.placeholder && prop.placeholder ) {
-        this.placeholder = prop.placeholder;
-      }
 
       if ( ! this.displayWidth ) {
         this.displayWidth = prop.displayWidth;

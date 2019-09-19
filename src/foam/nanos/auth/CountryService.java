@@ -7,7 +7,7 @@ import foam.mlang.MLang;
 import foam.mlang.predicate.Predicate;
 import foam.nanos.NanoService;
 import foam.nanos.notification.email.EmailMessage;
-import foam.util.Emails.EmailsUtility;
+import foam.nanos.notification.email.EmailService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,10 +18,12 @@ import java.util.stream.Collectors;
 public class CountryService extends ContextAwareSupport implements NanoService {
 
   protected DAO countryDAO;
+  protected EmailService emailService;
 
   @Override
   public void start() throws Exception {
     countryDAO   = (DAO) getX().get("countryDAO");
+    emailService = (EmailService) getX().get("email");
   }
 
   public Country getCountry(String query) {
@@ -46,6 +48,10 @@ public class CountryService extends ContextAwareSupport implements NanoService {
     // 4. by alternative names
     country = findCountry(MLang.IN(query, Country.ALTERNATIVE_NAMES));
 
+    if ( country == null ) {
+      notifySupport(query);
+    }
+
     return country;
   }
 
@@ -59,6 +65,14 @@ public class CountryService extends ContextAwareSupport implements NanoService {
     }
 
     return country;
+  }
+
+  protected void notifySupport(String query) {
+    EmailMessage emailMessage = new EmailMessage();
+    emailMessage.setSubject ("Unknown Country");
+    emailMessage.setBody    ("User just added an unknown country " + query);
+    emailMessage.setTo(new String[]{"ops@nanopay.net"});
+    emailService.sendEmail(getX(), emailMessage);
   }
 
   protected String formatName(String query) {

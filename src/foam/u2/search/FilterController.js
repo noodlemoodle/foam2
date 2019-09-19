@@ -636,19 +636,3 @@ foam.CLASS({
     }
   ]
 });
-
-foam.CLASS({
-  package: 'foam.u2.search',
-  name: 'ReferenceRefinement',
-  refines: 'foam.core.Reference',
-
-  properties: [
-    {
-      class: 'foam.u2.ViewSpec',
-      name: 'searchView',
-      expression: function(of) {
-        return of.ID.searchView;
-      }
-    }
-  ]
-});

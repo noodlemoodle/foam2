@@ -10,9 +10,7 @@ foam.CLASS({
   extends: 'foam.u2.View',
 
   requires: [
-    'foam.core.SimpleSlot',
     'foam.u2.search.SearchManager',
-    'foam.u2.search.TextSearchView',
     'foam.u2.view.SearchViewWrapper'
   ],
 
@@ -46,7 +44,7 @@ foam.CLASS({
     ^ input:not([type="checkbox"]):focus,
     ^ select:focus {
       outline: none;
-      border: 1px solid /*%PRIMARY3%*/ #406dea;
+      border: 1px solid %SECONDARYCOLOR%;
     }
 
     ^ .general-query {
@@ -113,30 +111,6 @@ foam.CLASS({
           predicate$: this.data$
         });
       }
-    },
-    {
-      class: 'Int',
-      name: 'loadingRequests',
-      documentation: `
-        Incremented every time an async call is made to the DAO and decremented
-        every time a call finishes. A non-zero value indicates that this view is
-        loading.
-      `
-    },
-    {
-      class: 'String',
-      name: 'countText',
-      documentation: `
-        The formatted text that shows how many items have been selected from the
-        DAO. Shows "Loading..." while waiting for the total count to avoid
-        "0 of 0 selected" being shown while loading.
-      `,
-      expression: function(selectedCount, totalCount, loadingRequests) {
-        if ( loadingRequests > 0 ) {
-          return 'Loading...';
-        }
-        return `${selectedCount.toLocaleString()} of ${totalCount.toLocaleString()} selected`;
-      }
     }
   ],
 
@@ -159,10 +133,9 @@ foam.CLASS({
 
           e.onDetach(this.searchManager);
 
-          var slot = self.SimpleSlot.create();
-
-          e
-            .start(self.TextSearchView, {
+          var generalQueryView = foam.u2.ViewSpec.createView(
+              { class: 'foam.u2.search.TextSearchView' },
+              {
                 richSearch: true,
                 of: self.dao.of.id,
                 onKey: true,
@@ -170,11 +143,11 @@ foam.CLASS({
                   class: 'foam.u2.tag.Input',
                   focused: true
                 }
-            }, slot)
-              .addClass('general-query')
-            .end();
-
-          this.searchManager.add(slot.value);
+              },
+              this,
+              this.__subSubContext__);
+          this.searchManager.add(generalQueryView);
+          e.start(generalQueryView).addClass('general-query').end();
 
           e.forEach(filters, function(f) {
             var axiom = self.dao.of.getAxiomByName(f);
@@ -193,7 +166,18 @@ foam.CLASS({
         }, this.filters$))
         .start()
           .addClass(self.myClass('count'))
-          .add(self.countText$)
+          // TODO: move formatting function to stdlib
+          .add(self.selectedCount$.map(function(a) {
+            return a.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          }))
+          .entity('nbsp')
+          .add('of')
+          .entity('nbsp')
+          .add(self.totalCount$.map(function(a) {
+            return a.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+          }))
+          .entity('nbsp')
+          .add('selected')
         .end()
         .tag(this.CLEAR, { buttonStyle: 'SECONDARY' });
     },
@@ -224,31 +208,18 @@ foam.CLASS({
       name: 'updateTotalCount',
       isFramed: true,
       code: function() {
-        this.loadingRequests++;
-        this.dao
-          .select(foam.mlang.sink.Count.create())
-          .then((c) => {
-            this.totalCount = c.value;
-          })
-          .finally(() => {
-            this.loadingRequests--;
-          });
+        this.dao.select(foam.mlang.sink.Count.create()).then(function(c) {
+          this.totalCount = c.value;
+        }.bind(this));
       }
     },
     {
       name: 'updateSelectedCount',
       isFramed: true,
-      code: function(_, __, ___, sink) {
-        this.loadingRequests++;
-        sink
-          .get()
-          .select(foam.mlang.sink.Count.create())
-          .then((c) => {
-            this.selectedCount = c.value;
-          })
-          .finally(() => {
-            this.loadingRequests--;
-          });
+      code: function(_, __, ___, dao) {
+        dao.get().select(foam.mlang.sink.Count.create()).then(function(c) {
+          this.selectedCount = c.value;
+        }.bind(this));
       }
     }
   ]

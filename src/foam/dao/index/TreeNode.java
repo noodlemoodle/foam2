@@ -16,6 +16,7 @@ import foam.mlang.predicate.True;
 import foam.mlang.sink.GroupBy;
 
 public class TreeNode {
+
   protected Object   key;
   protected Object   value;
   protected long     size;
@@ -47,6 +48,7 @@ public class TreeNode {
       this.level,
       this.left,
       this.right);
+
   }
 
   TreeNode maybeClone(TreeNode s) {
@@ -95,7 +97,6 @@ public class TreeNode {
         state.size += state.right.size;
       }
     }
-
     return split(skew(state, tail), tail);
   }
 
@@ -128,7 +129,6 @@ public class TreeNode {
 
       return r;
     }
-
     return node;
   }
 
@@ -163,7 +163,7 @@ public class TreeNode {
     } else {
       if ( compareValue < 0 ) {
         state.size -= size(state.left);
-        state.left  = removeKeyValue(state.left, prop, key, value, tail);
+        state.left = removeKeyValue(state.left, prop, key, value, tail);
         state.size += size(state.left);
       } else {
         state.size -= size(state.right);
@@ -197,7 +197,7 @@ public class TreeNode {
 
     if ( compareValue > 0 ) {
       state.size -= size(state.left);
-      state.left  = removeNode(state.left, key, prop);
+      state.left = removeNode(state.left, key, prop);
       state.size += size(state.left);
     } else {
       state.size -= size(state.right);
@@ -229,7 +229,7 @@ public class TreeNode {
 
   private TreeNode decreaseLevel(TreeNode node) {
     long expectedLevel = 1 + Math.min(
-      node.left  != null ? node.left.level : 0 ,
+      node.left != null ? node.left.level : 0 ,
       node.right != null ? node.right.level : 0);
 
     if ( expectedLevel < node.level ) {
@@ -239,7 +239,6 @@ public class TreeNode {
         node.right.level = expectedLevel;
       }
     }
-
     return node;
   }
 
@@ -350,7 +349,8 @@ public class TreeNode {
       return lte(s.left, key, prop);
     }
 
-    return new TreeNode(s.key, s.value, size(s) - size(s.right), s.level, s.left, null);
+    return new TreeNode(s.key, s.value, size(s) - size(s.right),
+      s.level, s.left, null);
   }
 
   /**
@@ -409,7 +409,7 @@ public class TreeNode {
    * @return a long[] which contains update skip and limit number.
    */
   protected long[] skipLimitTreeNode(TreeNode currentNode, Sink sink, long skip, long limit, long size, Index tail) {
-    if ( currentNode == null || size <= skip || limit <= 0 ) return new long[] {-1, -1};
+    if ( currentNode == null || size <= skip || limit <= 0 ) return new long[]{- 1, - 1};
     long currentSize = currentNode.size;
     TreeNode left = currentNode.getLeft();
     long leftSize = 0;
@@ -446,23 +446,20 @@ public class TreeNode {
    * Post-order traversal with efficient skip and limit. Similar implement with 'skipLimitTreeNode()' method
    */
   protected long[] reverseSortSkipLimitTreeNode(TreeNode currentNode, Sink sink, long skip, long limit, long size, Index tail) {
-    if ( currentNode == null || size <= skip || limit <= 0 ) return new long[] {-1, -1};
-    long     currentSize = currentNode.size;
-    TreeNode right       = currentNode.getRight();
-    long     rightSize   = 0;
-    long[]   skip_limit  = new long[] {skip, limit};
-
+    if ( currentNode == null || size <= skip || limit <= 0 ) return new long[]{- 1, - 1};
+    long currentSize = currentNode.size;
+    TreeNode right = currentNode.getRight();
+    long rightSize = 0;
+    long[] skip_limit = new long[]{skip, limit};
     if ( right != null ) {
       rightSize = right.size;
       if ( rightSize > skip ) {
         skip_limit = reverseSortSkipLimitTreeNode(right, sink, skip_limit[0], skip_limit[1], size, tail);
-      } else if ( rightSize == skip ) {
-        skip_limit[0] = 0;
-      } else {
+      } else if ( rightSize == skip ) skip_limit[0] = 0;
+      else {
         skip_limit[0] = skip_limit[0] - rightSize;
       }
     }
-
     Object value = currentNode.getValue();
     if ( tail.size(currentNode) > skip_limit[0] && skip_limit[1] > 0 ) {
       tail.planSelect(value, sink, skip_limit[0], skip_limit[1], null, null).select(value, sink, skip_limit[0], skip_limit[1], null, null);
@@ -473,7 +470,6 @@ public class TreeNode {
     } else {
       skip_limit[0] = skip_limit[0] - tail.size(currentNode);
     }
-
     TreeNode left = currentNode.getLeft();
     if ( left != null ) {
       skip_limit = reverseSortSkipLimitTreeNode(left, sink, skip_limit[0], skip_limit[1], size, tail);
@@ -486,32 +482,27 @@ public class TreeNode {
    */
   public void select(TreeNode currentNode, Sink sink, long skip, long limit, Comparator order, Predicate predicate, Index tail, boolean reverseSort) {
     if ( skip >= currentNode.size || limit <= 0 ) return;
-
-    if ( hasPredicate(predicate) || order != null ) {
-      // predicate == null means we already deal with predicate or original predicate is null
+    if ( ( predicate != null && predicate.partialEval() != null && ! ( predicate instanceof True ) ) || order != null ) {
+      // predicate == null means we already deal with predicate or predicate is origin null
       if ( order == null ) {
         if ( reverseSort ) {
-          // decorateSink if it have some predicate or order can't deal with index.
+          // decorateSink if it have some predicate or order can't be deal with index.
           sink = decorateSink(null, sink, skip, limit, null, predicate);
           reverseSortSkipLimitTreeNode(currentNode, sink, 0, AbstractDAO.MAX_SAFE_INTEGER, size, tail);
         } else {
           sink = decorateSink(null, sink, skip, limit, null, predicate);
-          select_(currentNode, sink, 0, AbstractDAO.MAX_SAFE_INTEGER, size, tail);
+          select_(currentNode, sink, skip, limit, size, tail);
         }
       } else {
         sink = decorateSink(null, sink, skip, limit, order, predicate);
-        select_(currentNode, sink, 0, AbstractDAO.MAX_SAFE_INTEGER, size, tail);
+        select_(currentNode, sink, skip, limit, size, tail);
         sink.eof();
       }
-    } else if ( reverseSort ) {
-      reverseSortSkipLimitTreeNode(currentNode, sink, skip, limit, size, tail);
-    } else {
+    } else if ( ! reverseSort ) {
       skipLimitTreeNode(currentNode, sink, skip, limit, size, tail);
+    } else {
+      reverseSortSkipLimitTreeNode(currentNode, sink, skip, limit, size, tail);
     }
-  }
-
-  public boolean hasPredicate(Predicate predicate) {
-    return predicate != null && predicate.partialEval() != null && ! ( predicate instanceof True );
   }
 
 }

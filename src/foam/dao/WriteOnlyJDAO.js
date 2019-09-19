@@ -15,19 +15,15 @@ foam.CLASS({
       buildJavaClass: function (cls) {
         cls.extras.push(`
           public WriteOnlyJDAO(foam.core.X x, foam.core.ClassInfo classInfo, String filename) {
-            this(x, new foam.dao.NullDAO(), classInfo, filename);
-          }
-
-          public WriteOnlyJDAO(foam.core.X x, foam.dao.DAO delegate, foam.core.ClassInfo classInfo, String filename) {
             setX(x);
             setOf(classInfo);
-            setDelegate(delegate);
+            setDelegate(new foam.dao.NullDAO());
 
             // create journal
             setJournal(new foam.dao.WriteOnlyFileJournal.Builder(x)
               .setFilename(filename)
               .setCreateFile(true)
-              .setDao(getDelegate())
+              .setDao(new foam.dao.NullDAO())
               .setLogger(new foam.nanos.logger.StdoutLogger())
               .build());
           }

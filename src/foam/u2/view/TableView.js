@@ -10,57 +10,70 @@ foam.CLASS({
   extends: 'foam.u2.view.UnstyledTableView',
 
   css: `
-    ^tr {
-      background: white;
-      border-bottom: 1px solid /*%GREY4%*/ #e7eaec;
-      display: flex;
-      height: 48px;
+    ^ {
+      border-spacing: 14px 8px;
     }
 
-    ^tbody > ^tr:hover {
-      background: /*%GREY5%*/ #f5f7fa;
-      cursor: pointer;
-    }
-
-    ^thead {
-      border: 1px solid /*%GREY4%*/ #e7eaec;
-      border-radius: 5px;
-      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-    }
-
-    ^td,
-    ^th {
-      align-items: center;
-      box-sizing: border-box;
-      color: /*%BLACK%*/ #1e1f21;
-      display: flex;
-      font-family: Roboto, 'Helvetica Neue', helvetica, sans-serif;
-      font-size: 14px;
-      line-height: 1.5;
-      overflow: hidden;
-      padding-left: 16px;
+    ^ th {
       text-align: left;
-      text-overflow: ellipsis;
       white-space: nowrap;
-      min-width: 40px; /* So when the table's width decreases, columns aren't hidden completely */
+      font-family: Roboto, 'Helvetica Neue', helvetica, sans-serif;
+      padding-left: 15px;
+      font-size: 14px;
+      line-height: 1;
+      letter-spacing: 0.4px;
+      color: #2b2b2b;
+      background: %BACKGROUNDCOLOR%;
+      box-sizing: border-box;
     }
 
-    ^th {
-      font-weight: 900;
-    }
-
-    ^th:not(:last-child) > img {
+    ^ th:not(:last-child) > img {
       margin-left: 8px;
     }
 
-    /**
-     * OTHER
-     */
+    ^ td {
+      white-space: nowrap;
+      font-family: Roboto, 'Helvetica Neue', helvetica, sans-serif;
+      line-height: 1.33;
+      letter-spacing: 0.2px;
+      padding-left: 15px;
+      font-size: 14px;
+      color: #2b2b2b;
+    }
+
+    ^row:hover {
+      background: #eee;
+      cursor: pointer;
+    }
+
+    ^ tbody > tr {
+      height: 48px;
+      background: white;
+    }
+
+    ^ tbody > tr > td {
+      border-top: solid 1px #e2e2e3;
+      border-bottom: solid 1px #e2e2e3;
+    }
+
+    ^ tbody > tr > td:first-child {
+      border-top-left-radius: 5px;
+      border-left: solid 1px #e2e2e3;
+    }
+
+    ^ tbody > tr > td:last-child {
+      border-top-right-radius: 5px;
+      border-right: solid 1px #e2e2e3;
+    }
+
     ^selected {
-      background: /*%PRIMARY5%*/ #e5f1fc;
+      background: #eee;
+    }
+
+    ^vertDots {
+      font-size: 20px;
+      font-weight: bold;
+      padding-right: 21px;
     }
 
     ^noselect {
@@ -74,6 +87,10 @@ foam.CLASS({
 
     ^ .disabled {
       color: #aaa;
+    }
+
+    ^context-menu-cell {
+      margin-right: 12px;
     }
   `,
 });

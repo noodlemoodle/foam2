@@ -38,7 +38,7 @@ foam.CLASS({
     }
     ^ .foam-u2-view-TableView-row:hover {
       cursor: pointer;
-      background: /*%GREY4%*/ #e7eaec;
+      background: %TABLEHOVERCOLOR%;
     }
     ^ .foam-u2-view-TableView-row {
       height: 40px;

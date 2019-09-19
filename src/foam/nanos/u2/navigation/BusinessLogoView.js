@@ -20,9 +20,7 @@ foam.CLASS({
   name: 'BusinessLogoView',
   extends: 'foam.u2.View',
 
-  imports: [
-    'theme'
-  ],
+  imports: [ 'group' ],
 
   documentation: 'View to display business logo and name.',
 
@@ -70,14 +68,14 @@ foam.CLASS({
 
   methods: [
     function initE() {
+      var self     = this;
+      var logoSlot = this.group.logo$.map(function(logo) { return logo || self.logo; });
+
       this
         .addClass(this.myClass())
         .start()
-          .tag({
-            class: 'foam.u2.tag.Image',
-            data$: this.theme$.dot('logo')
-          })
-          .on('click', this.goToDefault)
+          .tag({class: 'foam.u2.tag.Image', data$: logoSlot})
+          .on('click', self.goToDefault)
         .end();
     }
   ],

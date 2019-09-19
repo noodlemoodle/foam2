@@ -4,7 +4,13 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
-foam.CLASS({
+/**
+ * @license
+ * Copyright 2018 The FOAM Authors. All Rights Reserved.
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
+foam.CLASS( {
   package: 'foam.graphics',
   name: 'Graph',
   extends: 'foam.graphics.CView',
@@ -29,6 +35,10 @@ foam.CLASS({
     [ 'symbol' ],
     [ 'textColor', 'black' ],
     [ 'w', 0 ],
-    [ 'width', 500 ]
+    [ 'width', 500 ],
+  ],
+
+  methods: [
+
   ]
-});
+} );

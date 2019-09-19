@@ -14,8 +14,9 @@ foam.CLASS({
   javaImports: [
     'com.google.common.io.BaseEncoding',
     'foam.dao.DAO',
-    'foam.nanos.app.EmailConfig',
+    'foam.nanos.app.AppConfig',
     'foam.nanos.auth.User',
+    'foam.nanos.notification.email.SMTPEmailService',
     'foam.nanos.session.Session',
     'foam.util.SafetyUtil',
     'io.nayuki.qrcodegen.QrCode',
@@ -46,14 +47,14 @@ foam.CLASS({
 
   methods: [
     {
-      name: 'generateKeyAndQR',
+      name: 'generateKey',
       javaCode: `
         User user = (User) (x.get("agent") != null ?
           x.get("agent") :
           x.get("user")) ;
         DAO userDAO = (DAO) x.get("localUserDAO");
 
-        // fetch from localUserDAO to get updated user before setting TwoFactorSecret
+        // fetch from user dao to get secret key
         user = (User) userDAO.find(user.getId());
 
         // generate secret key, encode as base32 and store
@@ -65,20 +66,20 @@ foam.CLASS({
         user.setTwoFactorSecret(key);
         userDAO.put_(x, user);
 
+        if ( ! generateQrCode ) {
+          return key;
+        }
+
         try {
-          EmailConfig service = (EmailConfig) x.get("emailConfig");
+          AppConfig config = (AppConfig) x.get("appConfig");
+          SMTPEmailService service = (SMTPEmailService) x.get("smtpEmailService");
           String name = service == null ? "FOAM" : service.getDisplayName();
           String path = String.format("/%s:%s", name, user.getEmail());
           String query = String.format("secret=%s&issuer=%s&algorithm=%s", key, name, getAlgorithm());
           URI uri = new URI("otpauth", "totp", path, query, null);
-
-          return new OTPKey.Builder(x)
-            .setKey(key)
-            .setQrCode("data:image/svg+xml;charset=UTF-8,"+
-              QrCode.encodeText(uri.toASCIIString(), QrCode.Ecc.MEDIUM).toSvgString(0))
-            .build();
+          return "data:image/svg+xml;charset=UTF-8," + QrCode.encodeText(uri.toASCIIString(), QrCode.Ecc.MEDIUM).toSvgString(0);
         } catch ( Throwable t ) {
-          throw new RuntimeException("Error when generating QR code.", t);
+          throw new RuntimeException(t);
         }
       `
     },

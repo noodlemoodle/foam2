@@ -6,7 +6,6 @@
 package foam.dao.index;
 
 import foam.core.FObject;
-import foam.dao.AbstractSink;
 import foam.dao.Sink;
 import foam.mlang.order.Comparator;
 import foam.mlang.predicate.Predicate;
@@ -23,43 +22,17 @@ public class AltIndex
 
   public AltIndex(Index... indices) {
     for ( int i = 0 ; i < indices.length ; i++ )
-      addIndex(null, indices[i]);
+      addIndex(indices[i]);
   }
 
-  public Object addIndex(Object state, Index i) {
+  public void addIndex(Index i) {
     delegates_.add(i);
-
-    // No data to copy when just adding first index
-    if ( delegates_.size() == 1 ) return state;
-
-    // No state means no data to copy
-    if ( state == null ) return state;
-
-    // Copy all data from first index into new index, updating state
-    final Object[] sa   = toObjectArray(state);
-    Sink     sink = new AbstractSink() {
-      public void put(Object obj, foam.core.Detachable sub) {
-        sa[sa.length-1] = i.put(sa[sa.length-1], (FObject) obj);
-      }
-    };
-
-    delegates_.get(0).planSelect(sa[0], sink, 0, Long.MAX_VALUE, null, null).select(sa[0], sink, 0, Long.MAX_VALUE, null, null);
-
-    return sa;
   }
 
   protected Object[] toObjectArray(Object state) {
-    Object[] s2 = new Object[delegates_.size()];
+    if ( state == null ) return new Object[delegates_.size()];
 
-    if ( state != null ) {
-      Object[] s1 = (Object[]) state;
-
-      for ( int i = 0 ; i < s1.length ; i++ ) {
-        s2[i] = s1[i];
-      }
-    }
-
-    return s2;
+    return (Object[]) state;
   }
 
   public Object put(Object state, FObject value) {
@@ -92,9 +65,7 @@ public class AltIndex
 
 
   public FindPlan planFind(Object state, Object key) {
-    if ( state == null ) return NotFoundPlan.instance();
-
-    Object[] s         = (Object[]) state;
+    Object[] s         = toObjectArray(state);
     FindPlan bestPlan  = NoPlan.instance();
     Object   bestState = null;
 
@@ -103,7 +74,7 @@ public class AltIndex
 
       // only return the smallest cost plan
       if ( plan.cost() < bestPlan.cost() ) {
-        bestPlan  = plan;
+        bestPlan = plan;
         bestState = s[i];
         if ( bestPlan.cost() <= GOOD_ENOUGH_PLAN_COST ) break;
       }
@@ -113,14 +84,12 @@ public class AltIndex
   }
 
   public SelectPlan planSelect(Object state, Sink sink, long skip, long limit, Comparator order, Predicate predicate) {
-    if ( state == null ) return NotFoundPlan.instance();
+    Object[]     s                 = toObjectArray(state);
+    SelectPlan   bestPlan          = NoPlan.instance();
+    Object       bestState         = null;
+    Predicate    originalPredicate = null;
 
-    Object[]   s                 = (Object[]) state;
-    SelectPlan bestPlan          = NoPlan.instance();
-    Object     bestState         = null;
-    Predicate  originalPredicate = null;
-
-    for ( int i = 0 ; i < delegates_.size() ; i++ ) {
+    for ( int i = 0; i < delegates_.size(); i++ ) {
       // ???: Why is this?
       // To keep the original predicate, because in our next operate the predicate will be changed
       if ( predicate != null ) {
@@ -141,8 +110,10 @@ public class AltIndex
   }
 
   public long size(Object state) {
-    if ( state == null ) return 0;
-    Object[] s = (Object[]) state;
+    Object[] s = toObjectArray(state);
     return s.length > 0 ? delegates_.get(0).size(s[0]) : 0;
+  }
+
+  public void onAdd(Sink sink) {
   }
 }

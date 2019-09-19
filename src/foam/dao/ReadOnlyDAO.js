@@ -44,14 +44,6 @@ foam.CLASS({
       code: function removeAll() {
         return Promise.reject('Cannot removeAll from ReadOnlyDAO');
       }
-    },
-    {
-      name: 'cmd_',
-      javaCode: `throw new UnsupportedOperationException("Cannot cmd from ReadOnlyDAO");`,
-      swiftCode: `throw FoamError("Cannot cmd from ReadOnlyDAO")`,
-      code: function cmd_() {
-        return Promise.reject('Cannot cmd from ReadOnlyDAO');
-      }
     }
   ]
 });

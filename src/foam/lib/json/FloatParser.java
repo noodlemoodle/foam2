@@ -12,7 +12,6 @@ public class FloatParser implements Parser {
   public PStream parse(PStream ps, ParserContext x) {
     StringBuilder n = new StringBuilder();
     boolean decimalFound = false;
-    boolean exponentFound = false;
 
     if ( ! ps.valid() ) return null;
 
@@ -37,16 +36,7 @@ public class FloatParser implements Parser {
           n.append(c);
       } else if ( c == '.' ) { // TODO: localization
         if ( decimalFound ) return null;
-
-        // Java throws a NumberFormatException if exponent is before decimal.
-        // Exponent with no decimal is acceptable.
-        if ( exponentFound ) return null;
-
         decimalFound = true;
-        n.append(c);
-      } else if ( c == 'E' || c == 'e' ) {
-        if ( exponentFound ) return null;
-        exponentFound = true;
         n.append(c);
       } else {
         break;

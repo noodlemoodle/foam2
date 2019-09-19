@@ -125,10 +125,10 @@ return uuid;`
 
         // console.log('***** SEND SESSION ID: ', this.sessionID/*foam.json.stringify(msg)*/);
 
-        msg.attributes.replyBox.localBox = this.SessionReplyBox.create({
+        msg.attributes.replyBox = this.SessionReplyBox.create({
           msg:       msg,
           clientBox: this,
-          delegate:  msg.attributes.replyBox.localBox
+          delegate:  msg.attributes.replyBox
         });
 
         this.delegate.send(msg);

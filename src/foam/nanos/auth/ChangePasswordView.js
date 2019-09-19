@@ -56,7 +56,7 @@ foam.CLASS({
       line-height: 1.33;
       letter-spacing: 0.2;
       text-align: left;
-      color: /*%BLACK%*/ #1e1f21;
+      color: #093649;
     }
     ^ .originalPass-Text{
       width: 118px;
@@ -106,13 +106,13 @@ foam.CLASS({
       text-align: center;
       color: #ffffff;
       cursor: pointer;
-      border: 1px solid /*%PRIMARY3%*/ #406dea;
-      background-color: /*%PRIMARY3%*/ #406dea;
+      border: 1px solid %SECONDARYCOLOR%;
+      background-color: %SECONDARYCOLOR%;
       margin-left: 20px;
       margin-top: 19px;
     }
     ^ .update-BTN:hover {
-      border: 1px solid /*%PRIMARY3%*/ #406dea;
+      border: 1px solid %SECONDARYCOLOR%;
       opacity: 0.9;
     }
     ^ h1{
@@ -123,7 +123,7 @@ foam.CLASS({
       line-height: 1;
       letter-spacing: 0.3px;
       text-align: left;
-      color: /*%BLACK%*/ #1e1f21;
+      color: #093649;
       display: inline-block;
     }
     ^ h2{
@@ -133,7 +133,7 @@ foam.CLASS({
       font-weight: 300;
       letter-spacing: 0.2px;
       text-align: left;
-      color: /*%BLACK%*/ #1e1f21;
+      color: #093649;
       display: inline-block;
     }
   `,

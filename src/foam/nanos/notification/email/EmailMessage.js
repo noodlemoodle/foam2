@@ -14,15 +14,7 @@ foam.CLASS({
     'foam.nanos.auth.CreatedAware',
     'foam.nanos.auth.CreatedByAware',
     'foam.nanos.auth.LastModifiedByAware'
-  ],
-
-  tableColumns: [
-    'created',
-    'subject',
-    'to',
-    'from',
-    'status'
-  ],
+ ],
 
   properties: [
     {
@@ -32,7 +24,6 @@ foam.CLASS({
     {
       class: 'DateTime',
       name: 'created',
-      tableWidth: 170
     },
     {
       class: 'Reference',
@@ -91,12 +82,6 @@ foam.CLASS({
       hidden: true,
       documentation: 'Added to suppress journal comments regarding "modified by". Also, a non-null value is required.',
       javaFactory: 'return 1L;'
-    },
-    {
-      class: 'Enum',
-      of: 'foam.nanos.notification.email.Status',
-      name: 'status',
-      tableWidth: 100
-    },
+    }
   ]
 });

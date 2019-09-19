@@ -43,8 +43,7 @@ foam.CLASS({
       visibility: foam.u2.Visibility.RO,
       tableCellFormatter: function(value) {
         if ( value ) this.start().style({ color: '#0f0' }).add(value).end();
-      },
-      tableWidth: 85
+      }
     },
     {
       class: 'Long',
@@ -52,8 +51,7 @@ foam.CLASS({
       visibility: foam.u2.Visibility.RO,
       tableCellFormatter: function(value) {
         if ( value ) this.start().style({ color: '#f00' }).add(value).end();
-      },
-      tableWidth: 85
+      }
     }
   ],
 

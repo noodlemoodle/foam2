@@ -41,7 +41,9 @@ public class AuthMOP
       getRootPermission_(x) :
       getRootPermission_(x) + "." + name ;
 
-    return authService.check(x, permissionString);
+    java.security.Permission permission = new AuthPermission(permissionString);
+
+    return authService.checkPermission(x, permission);
   }
 
   @Override

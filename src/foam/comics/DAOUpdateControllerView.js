@@ -29,7 +29,7 @@ foam.CLASS({
 
   imports: [
     'stack',
-    'dao? as importedDAO'
+    'dao'
   ],
 
   exports: [
@@ -58,13 +58,6 @@ foam.CLASS({
   properties: [
     {
       name: 'key'
-    },
-    {
-      class: 'foam.dao.DAOProperty',
-      name: 'dao',
-      factory: function() {
-        return this.importedDAO;
-      }
     },
     {
       class: 'FObjectProperty',

@@ -6,39 +6,91 @@
 
 foam.CLASS({
   package: 'foam.u2.layout',
-  name: 'Rows',
+  name: 'AbstractLayout',
   extends: 'foam.u2.Element',
-  css: `
-    ^ {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: stretch;
+  requires: [
+    'foam.u2.layout.Item'
+  ],
+  properties: [
+    {
+      class: 'Map',
+      name: 'defaultChildStyle'
+    },
+    {
+      class: 'foam.u2.ViewSpec',
+      name: 'border',
+      value: { class: 'foam.u2.borders.NullBorder' }
     }
-  `,
+  ],
+
   methods: [
     function initE() {
       this.SUPER();
       this.addClass(this.myClass());
+      this.style({
+        'justify-content': 'space-between',
+        'align-items': 'stretch'
+      });
+    },
+
+    function start(spec, args, slot) {
+      var c = this.SUPER(spec, args, slot);
+      // Force the parent to this because the add() override could cause
+      // the parent not to be this so the user would unknowingly have to
+      // call end() more times.
+      c.parentNode = this;
+      return c;
+    },
+
+    /**
+     * This expects all child elements to be instances of foam.u2.layout.Col
+     * so we override the add method to enforce this.
+     */
+    function add(...args) {
+      args.forEach(value => {
+        if ( this.Item.isInstance(value) ) {
+          this.SUPER(value);
+        }
+        else {
+          this
+            .start(this.Item)
+              .style(this.defaultChildStyle)
+              .start(this.border)
+                .add(value)
+              .end()
+            .end();
+        }
+      });
+      return this;
     }
   ]
 });
 
 foam.CLASS({
   package: 'foam.u2.layout',
-  name: 'Cols',
-  extends: 'foam.u2.Element',
+  name: 'Rows',
+  extends: 'foam.u2.layout.AbstractLayout',
   css: `
     ^ {
       display: flex;
-      justify-content: space-between;
-      align-items: stretch;
+      flex-direction: column;
     }
-  `,
-  methods: [
-    function initE() {
-      this.SUPER();
-      this.addClass(this.myClass());
+  `
+});
+
+foam.CLASS({
+  package: 'foam.u2.layout',
+  name: 'Cols',
+  extends: 'foam.u2.layout.AbstractLayout',
+  css: `
+    ^ {
+      display: flex;
     }
-  ]
+  `
+});
+
+foam.CLASS({
+  package: 'foam.u2.layout',
+  name: 'Item',
+  extends: 'foam.u2.Element'
 });

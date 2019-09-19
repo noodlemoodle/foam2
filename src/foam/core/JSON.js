@@ -355,10 +355,13 @@ foam.CLASS({
       if ( ! this.outputDefaultValues && p.isDefaultValue(o[p.name]) )
         return false;
 
+      // Access property before checking o.hasOwnProperty.
+      var v = o[p.name];
       if ( this.outputOwnPropertiesOnly && ! o.hasOwnProperty(p.name) )
         return false;
 
-      var v = o[p.name];
+      if ( foam.Array.isInstance(v) && v.length == 0 )
+        return false;
 
       if ( includeComma ) this.out(',');
 

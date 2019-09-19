@@ -41,10 +41,6 @@ foam.CLASS({
       name: 'targetDAOKey'
     },
     {
-      class: 'String',
-      name: 'unauthorizedTargetDAOKey'
-    },
-    {
       class: 'Object',
       name: 'targetProperty',
       javaType: 'foam.core.PropertyInfo',
@@ -75,10 +71,6 @@ foam.CLASS({
       },
       javaFactory:`
       try {
-        foam.nanos.auth.User user = (foam.nanos.auth.User) getX().get("user");
-        if ( user != null && user.getId() == foam.nanos.auth.User.SYSTEM_USER_ID && getUnauthorizedTargetDAOKey().length() != 0 ) {
-          return ((foam.dao.DAO) getX().get(getUnauthorizedTargetDAOKey())).inX(getX());
-        }
         return ((foam.dao.DAO) getX().get(getTargetDAOKey())).inX(getX());
       } catch ( NullPointerException e ) {
         foam.nanos.logger.Logger logger = (foam.nanos.logger.Logger) getX().get("logger");

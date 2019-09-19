@@ -65,7 +65,7 @@ foam.CLASS({
       left: 0;
       transform: translateY(100%);
       background: white;
-      border: 1px solid /*%GREY3%*/ #cbcfd4;
+      border: 1px solid #bdbdbd;
       max-height: 378px;
       overflow-y: scroll;
       box-sizing: border-box;
@@ -91,20 +91,8 @@ foam.CLASS({
       -webkit-appearance: textfield;
       padding: 1px 2px;
       cursor: default;
-      border: 1px solid /*%GREY3%*/ #cbcfd4;
+      border: 1px solid;
       min-width: 94px;
-    }
-
-    ^selection-view:hover {
-      border-color: /*%GREY2%*/ #9ba1a6;
-    }
-
-    ^:focus {
-      outline: none;
-    }
-
-    ^:focus ^selection-view {
-      border-color: /*%PRIMARY3%*/ #406dea;
     }
 
     ^chevron::before {
@@ -279,102 +267,92 @@ foam.CLASS({
       this.onDataUpdate();
 
       this
-        .add(this.slot(function(mode, fullObject_) {
-          if ( mode !== foam.u2.DisplayMode.RO ) {
-            return self.E()
-              .attrs({
-                name: this.name,
-                tabindex: 0
-              })
-              .addClass(this.myClass())
+        .attrs({ name: this.name })
+        .addClass(this.myClass())
+        .start()
+          .addClass(this.myClass('selection-view'))
+          .enableClass('disabled', this.mode$.map((mode) => mode === foam.u2.DisplayMode.DISABLED))
+          .on('click', function() {
+            if ( self.mode === foam.u2.DisplayMode.RW ) {
+              self.isOpen_ = ! self.isOpen_;
+            }
+          })
+          .start()
+            .addClass(this.myClass('custom-selection-view'))
+            .add(this.slot((data) => {
+              return this.E().tag(self.selectionView, {
+                data: data,
+                fullObject$: this.fullObject_$,
+                defaultSelectionPrompt$: this.choosePlaceholder$
+              });
+            }))
+          .end()
+          .start()
+            .addClass(this.myClass('chevron'))
+          .end()
+        .end()
+        .start()
+          .addClass(this.myClass('container'))
+          .show(self.isOpen_$)
+          .add(self.search$.map((searchEnabled) => {
+            if ( ! searchEnabled ) return null;
+            return this.E()
               .start()
-                .addClass(this.myClass('selection-view'))
-                .enableClass('disabled', this.mode$.map((mode) => mode === foam.u2.DisplayMode.DISABLED))
-                .on('click', function() {
-                  if ( self.mode === foam.u2.DisplayMode.RW ) {
-                    self.isOpen_ = ! self.isOpen_;
-                  }
-                })
-                .start()
-                  .addClass(this.myClass('custom-selection-view'))
-                  .add(this.slot((data) => {
-                    return this.E().tag(self.selectionView, {
-                      data: data,
-                      fullObject$: this.fullObject_$,
-                      defaultSelectionPrompt$: this.choosePlaceholder$
-                    });
-                  }))
+                .start('img')
+                  .attrs({ src: 'images/ic-search.svg' })
                 .end()
-                .start()
-                  .addClass(this.myClass('chevron'))
-                .end()
-              .end()
-              .start()
-                .addClass(this.myClass('container'))
-                .show(self.isOpen_$)
-                .add(self.search$.map((searchEnabled) => {
-                  if ( ! searchEnabled ) return null;
-                  return this.E()
-                    .start()
-                      .start('img')
-                        .attrs({ src: 'images/ic-search.svg' })
-                      .end()
-                      .startContext({ data: self })
-                        .addClass('search')
-                        .add(self.FILTER_.clone().copyFrom({ view: {
-                          class: 'foam.u2.view.TextField',
-                          placeholder: this.searchPlaceholder,
-                          onKey: true
-                        } }))
-                      .endContext()
-                    .end();
-                }))
-                .add(this.slot(function(sections) {
-                  var promiseArray = [];
-                  sections.forEach(function(section) {
-                    promiseArray.push(section.dao.select(self.COUNT()));
-                  });
-      
-                  return Promise.all(promiseArray).then((resp) => {
-                    var index = 0;
-                    return this.E().forEach(sections, function(section) {
-                      this
-                        .start().hide(!! section.hideIfEmpty && resp[index].value <= 0 || ! section.heading)
-                          .addClass(self.myClass('heading'))
-                          .add(section.heading)
-                        .end()
-                        .start()
-                          .select(section.filtered || section.dao, (obj) => {
-                            return this.E()
-                              .start(self.rowView, { data: obj })
-                                .enableClass('disabled', section.disabled)
-                                .callIf(! section.disabled, function() {
-                                  this.on('click', () => {
-                                    self.fullObject_ = obj;
-                                    self.data = obj.id;
-                                    self.isOpen_ = false;
-                                  });
-                                })
-                              .end();
+                .startContext({ data: self })
+                  .addClass('search')
+                  .add(self.FILTER_.clone().copyFrom({ view: {
+                    class: 'foam.u2.view.TextField',
+                    placeholder: this.searchPlaceholder,
+                    onKey: true
+                  } }))
+                .endContext()
+              .end();
+          }))
+          .add(this.slot(function(sections) {
+            var promiseArray = [];
+            sections.forEach(function(section) {
+              promiseArray.push(section.dao.select(self.COUNT()));
+            });
+
+            return Promise.all(promiseArray).then((resp) => {
+              var index = 0;
+              return this.E().forEach(sections, function(section) {
+                this
+                  .start().hide(!! section.hideIfEmpty && resp[index].value <= 0 || ! section.heading)
+                    .addClass(self.myClass('heading'))
+                    .add(section.heading)
+                  .end()
+                  .start()
+                    .select(section.filtered || section.dao, (obj) => {
+                      return this.E()
+                        .start(self.rowView, { data: obj })
+                          .enableClass('disabled', section.disabled)
+                          .callIf(! section.disabled, function() {
+                            this.on('click', () => {
+                              self.fullObject_ = obj;
+                              self.data = obj.id;
+                              self.isOpen_ = false;
+                            });
                           })
                         .end();
-                        index++;
-                    });
-                  });
-                }))
-                .add(this.slot(function(action) {
-                  if ( action ) {
-                    return this.E()
-                      .start(self.DefaultActionView, { action: action })
-                        .addClass(self.myClass('action'))
-                      .end();
-                  }
-                }))
-              .end();
-          } else {
-            return self.E().add(fullObject_ ? fullObject_.toSummary() : '');
-          }
-        }))
+                    })
+                  .end();
+                  index++;
+              });
+            });
+          }))
+          .add(this.slot(function(action) {
+            if ( action ) {
+              return this.E()
+                .start(self.DefaultActionView, { action: action })
+                  .addClass(self.myClass('action'))
+                .end();
+            }
+          }))
+        .end();
     },
 
     function updateMode_(mode) {
@@ -509,7 +487,7 @@ foam.CLASS({
         ^ {
           border: 0;
           border-top: 1px solid #f4f4f9;
-          color: /*%PRIMARY3%*/ #406dea;
+          color: %SECONDARYCOLOR%;
           display: flex;
           font-size: 12px;
           text-align: left;
@@ -518,7 +496,7 @@ foam.CLASS({
 
         ^:hover {
           cursor: pointer;
-          color: /*%PRIMARY2%*/ #144794;
+          color: %SECONDARYHOVERCOLOR%;
         }
 
         ^ img + span {

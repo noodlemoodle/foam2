@@ -13,15 +13,14 @@ import org.apache.http.impl.client.HttpClients;
 
 public class SendSlackNotificationDAO extends ProxyDAO {
 
-    public SendSlackNotificationDAO(X x) {
-      setX(x);
+    public SendSlackNotificationDAO(DAO delegate) {
+      setDelegate(delegate);
     }
 
     public SendSlackNotificationDAO(X x, DAO delegate) {
       setX(x);
       setDelegate(delegate);
     }
-
     @Override
     public FObject put_(X x, FObject obj) {
       Notification notif = (Notification) obj;

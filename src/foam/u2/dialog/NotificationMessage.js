@@ -28,6 +28,7 @@ foam.CLASS({
       name: 'type'
     },
     'message',
+    'data'
   ],
 
   css: `
@@ -95,26 +96,20 @@ foam.CLASS({
   `,
 
   methods: [
-    function initE() {
+    function initE(){
       var self = this;
 
       this
         .addClass(this.myClass())
         .enableClass(this.myClass('error-background'), this.type === 'error')
         .start()
-          .callIfElse(foam.String.isInstance(this.message), function() {
-            this.add(self.message);
-          }, function() {
-            this.tag(self.message);
-          })
+          .add(this.message)
         .end()
-        .startContext({ data: this })
+        .startContext({ data: this})
           .start().addClass('close-x').add(this.CLOSE).end()
         .endContext();
 
-        setTimeout(function() {
-          self.remove();
-        }, 3900);
+        setTimeout(function() { self.remove(); }, 3900);
     }
   ],
 

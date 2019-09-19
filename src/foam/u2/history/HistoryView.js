@@ -41,7 +41,7 @@ foam.CLASS({
       line-height: 1;
       letter-spacing: 0.3px;
       text-align: left;
-      color: /*%BLACK%*/ #1e1f21;
+      color: #093649;
     }
     ^ .timelineRecord {
       position: relative;

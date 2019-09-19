@@ -21,7 +21,7 @@ import java.util.Map;
 public class AuditDAO
   extends ProxyDAO
 {
-  protected final Outputter outputter = new Outputter(getX());
+  protected final Outputter outputter = new Outputter();
 
   /**
    * Creates a format message containing the

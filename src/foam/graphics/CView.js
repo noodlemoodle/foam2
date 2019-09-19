@@ -514,10 +514,7 @@ foam.CLASS({
     {
       name: 'canvas',
       hidden: 'true',
-      transient: true,
-      expression: function(parent$canvas) {
-        return parent$canvas;
-      }
+      transient: true
     },
     {
       name: 'transform_',
@@ -581,12 +578,11 @@ foam.CLASS({
       p.x /= p.w;
       p.y /= p.w;
       p.w = 1;
-      return p;
     },
 
     function globalToLocalCoordinates(p) {
-      if ( this.parent ) p = this.parent.globalToLocalCoordinates(p);
-      return this.parentToLocalCoordinates(p);
+      if ( this.parent ) this.parent.globalToLocalCoordinates(p);
+      this.parentToLocalCoordinates(p);
     },
 
     function findFirstChildAt(p) {
@@ -705,6 +701,7 @@ foam.CLASS({
 
     function addChild_(c) {
       c.parent = this;
+      c.canvas = this.canvas;
       return c;
     },
 
@@ -846,10 +843,6 @@ foam.CLASS({
     {
       name: 'border',
       value: '#000000'
-    },
-    {
-      class: 'Boolean',
-      name: 'clip'
     }
   ],
 
@@ -861,8 +854,7 @@ foam.CLASS({
         x.lineWidth = this.borderWidth;
         x.stroke();
       }
-      if ( this.color ) x.fill();
-      if ( this.clip ) x.clip();
+      if ( this.color  ) x.fill();
     }
   ]
 });

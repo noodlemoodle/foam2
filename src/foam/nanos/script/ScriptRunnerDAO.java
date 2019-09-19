@@ -10,6 +10,7 @@ import foam.core.*;
 import foam.dao.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import foam.nanos.pool.FixedThreadPool;
 
 public class ScriptRunnerDAO
   extends ProxyDAO
@@ -49,7 +50,7 @@ public class ScriptRunnerDAO
     final CountDownLatch latch = new CountDownLatch(1);
 
     try {
-      ((Agency) x.get("threadPool")).submit(x, new ContextAgent() {
+      ((FixedThreadPool) x.get("threadPool")).submit(x, new ContextAgent() {
         @Override
         public void execute(X y) {
           try {
@@ -66,7 +67,7 @@ public class ScriptRunnerDAO
 
           latch.countDown();
         }
-      }, "Run script. Script id: " + script.getId());
+      });
 
       latch.await(estimatedTime, TimeUnit.MILLISECONDS);
     } catch(InterruptedException e) {

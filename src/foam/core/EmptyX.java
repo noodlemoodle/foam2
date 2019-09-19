@@ -30,7 +30,7 @@ abstract class AbstractX
   }
 
   public Object get(Object key) {
-    return get(this, key.toString());
+    return get(this, key);
   }
 
   public int getInt(Object key) {
@@ -81,29 +81,37 @@ abstract class AbstractXI
   extends AbstractX
   implements Cloneable
 {
-  protected X leftChild_;
-  protected X rightChild_;
+  protected X   leftChild_;
+  protected X   rightChild_;
 
-  protected abstract String getKey();
-  protected X getLeftChild()  { return leftChild_; }
+  protected abstract Object getKey();
+  protected X getLeftChild() { return leftChild_; }
   protected X getRightChild() { return rightChild_; }
-  protected void setLeftChild(X child)  { leftChild_  = child; }
-  protected void setRightChild(X child) { rightChild_ = child; }
+  protected void setLeftChild(X leftChild) { leftChild_ = leftChild; }
+  protected void setRightChild(X rightChild) { rightChild_ = rightChild; }
 
   public X put(Object key, Object value) {
-    String skey = key.toString();
-    int comp = skey.compareTo(getKey());
-    if ( comp == 0 ) return new XI(getLeftChild(), getRightChild(), skey, value);
-    if ( comp < 0  ) return clone(getLeftChild().put(skey, value), getRightChild());
-    return clone(getLeftChild(), getRightChild().put(skey, value));
+    String okey = getKey().toString();
+    String nkey = key.toString();
+    if ( nkey.compareTo(okey) == 0 ) {
+      return new XI(getLeftChild(), getRightChild(), getKey(), value);
+    }
+    if ( nkey.compareTo(okey) < 0 ) {
+      return clone(getLeftChild().put(key, value), getRightChild());
+    }
+    return clone(getLeftChild(), getRightChild().put(key, value));
   }
 
   public X putFactory(Object key, XFactory factory) {
-    String skey = key.toString();
-    int comp = skey.compareTo(getKey());
-    if ( comp == 0 ) return new FactoryXI(getLeftChild(), getRightChild(), getKey(), factory);
-    if ( comp < 0  ) return clone(getLeftChild().putFactory(skey, factory), getRightChild());
-    return clone(getLeftChild(), getRightChild().putFactory(skey, factory));
+    String okey = getKey().toString();
+    String nkey = key.toString();
+    if ( nkey.compareTo(okey) == 0 ) {
+      return new FactoryXI(getLeftChild(), getRightChild(), getKey(), factory);
+    }
+    if ( nkey.compareTo(okey) < 0 ) {
+      return clone(getLeftChild().putFactory(key, factory), getRightChild());
+    }
+    return clone(getLeftChild(), getRightChild().putFactory(key, factory));
   }
 
   protected X clone(X left, X right) {
@@ -129,24 +137,28 @@ abstract class AbstractXI
 class XI
   extends AbstractXI
 {
-  final String key_;
-  final Object value_;
+  final Object  key_;
+  final Object  value_;
 
   XI(X leftChild, X rightChild, Object key, Object value) {
     leftChild_  = leftChild;
     rightChild_ = rightChild;
-    key_        = key.toString();
+    key_        = key;
     value_      = value;
   }
   @Override
-  protected String getKey() { return key_; }
+  protected Object getKey() { return key_; }
 
   public Object get(X x, Object key) {
-    String skey = key.toString();
-    int comp = skey.compareTo(key_);
-    if ( comp == 0 ) return value_;
-    if ( comp < 0  ) return getLeftChild().get(x, skey);
-    return getRightChild().get(x, skey);
+    String okey = key_.toString();
+    String nkey = key.toString();
+    if ( nkey.compareTo(okey) == 0 ) {
+      return value_;
+    }
+    if ( nkey.compareTo(okey) < 0 ) {
+      return getLeftChild().get(x, key);
+    }
+    return getRightChild().get(x, key);
   }
 
   @Override
@@ -160,25 +172,29 @@ class XI
 class FactoryXI
   extends AbstractXI
 {
-  final String   key_;
-  final XFactory factory_;
+  final Object    key_;
+  final XFactory  factory_;
 
   FactoryXI(X leftChild, X rightChild, Object key, XFactory factory) {
     leftChild_  = leftChild;
     rightChild_ = rightChild;
-    key_        = key.toString();
+    key_        = key;
     factory_    = factory;
   }
 
   @Override
-  protected String getKey() { return key_; }
+  protected Object getKey() { return key_; }
 
   public Object get(X x, Object key) {
-    String skey = key.toString();
-    int comp = skey.compareTo(key_);
-    if ( comp == 0 ) return factory_.create(x);
-    if ( comp < 0  ) return getLeftChild().get(x, skey);
-    return getRightChild().get(x, skey);
+    String okey = key_.toString();
+    String nkey = key.toString();
+    if ( nkey.compareTo(okey) == 0 ) {
+      return factory_.create(x);
+    }
+    if ( nkey.compareTo(okey) < 0 ) {
+      return getLeftChild().get(x, key);
+    }
+    return getRightChild().get(x, key);
   }
 
   @Override

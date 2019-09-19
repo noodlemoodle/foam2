@@ -19,14 +19,10 @@ public class SingletonFactory
   public synchronized Object create(X x) {
     if ( delegate_ != null ) {
       XFactory delegate = delegate_;
-      setDelegate(null);
+      delegate_ = null;
       instance_ = delegate.create(x);
     }
 
     return instance_;
-  }
-
-  public synchronized void setDelegate(XFactory delegate) {
-    delegate_ = delegate;
   }
 }

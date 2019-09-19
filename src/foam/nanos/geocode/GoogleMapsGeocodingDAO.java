@@ -6,17 +6,20 @@
 
 package foam.nanos.geocode;
 
-import foam.core.*;
+import foam.core.ContextAgent;
+import foam.core.FObject;
+import foam.core.PropertyInfo;
+import foam.core.X;
 import foam.dao.DAO;
 import foam.dao.ProxyDAO;
 import foam.lib.json.JSONParser;
 import foam.nanos.auth.Address;
+import foam.nanos.pool.FixedThreadPool;
 import foam.util.SafetyUtil;
 import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.lang.Exception;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -52,7 +55,7 @@ public class GoogleMapsGeocodingDAO
   public FObject put_(X x, FObject obj) {
     final FObject result = super.put_(x, obj);
 
-    ((Agency) x.get("threadPool")).submit(x, new ContextAgent() {
+    ((FixedThreadPool) x.get("threadPool")).submit(x, new ContextAgent() {
       @Override
       public void execute(X x) {
         if ( result == null ) {
@@ -164,7 +167,7 @@ public class GoogleMapsGeocodingDAO
           IOUtils.close(conn);
         }
       }
-    }, "GoogleMaps Geocoding DAO");
+    });
 
     return result;
   }
