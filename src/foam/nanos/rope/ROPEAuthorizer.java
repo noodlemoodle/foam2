@@ -9,6 +9,7 @@ package foam.nanos.rope;
 import foam.core.FObject;
 import foam.core.X;
 import foam.dao.DAO;
+import static foam.mlang.MLang.*;
 import foam.nanos.auth.AuthService;
 import foam.nanos.auth.AuthorizationException;
 import foam.nanos.auth.Authorizer;
@@ -47,18 +48,24 @@ public class ROPEAuthorizer implements Authorizer {
     if ( ! ropeSearch(targetModel, ROPEActions.D, obj, x) ) throw new AuthorizationException("You don't have permission to create this object");
   }
 
+  public List<ROPE> getTargetRopes(String targetModel) {
+    return (List<ROPE>) ((ArraySink) ropeDAO_
+      .where(
+        EQ(ROPE.TARGET_MODEL, targetModel)
+      ) 
+      .select(new ArraySink()))
+      .getArray();
+  }
+
   public boolean ropeSearch(String targetModel, ROPEActions operation, FObject obj, X x) {
 
     // TODO targetModel is no longer passed in and ROPE.targetModel is now of type CLASS
     Class targetClass = Class.forName(targetModel);
 
     // if the object is the context user itself return true for now TODO
-    if ( targetModel == "foam.nanos.auth.User" && ((User) obj).getId() == this.user_.getId() ) return true;
+    if ( targetModel == "foam.nanos.auth.User" && ((User) obj).getId() == user_.getId() ) return true;
 
-    List<ROPE> ropes = (List<ROPE>) ((ArraySink) this.ropeDAO_
-      .where(EQ(ROPE.TARGET_MODEL, targetModel)) // need a search for source_model as well
-      .select(new ArraySink()))
-      .getArray();
+    List<ROPE> ropes = getTargetRopes(targetModel);
 
     for ( ROPE rope : ropes ) {
       DAO junctionDAO = (DAO) x.get(rope.getJunctionDAOKey());
@@ -71,8 +78,8 @@ public class ROPEAuthorizer implements Authorizer {
         List<junctionClass> junctionObjs = ((ArraySink) junctionDAO
           .where(
             OR(
-              AND(!rope.getIsInverse(), EQ(junctionClass.TARGET_ID, (targetClass) obj.getId())),
-              AND(rope.getIsInverse(), EQ(junctionClass.SOURCE_ID, (targetClass) obj.getId()))
+              AND(!rope.getIsInverse(), EQ(rope.getJunctionModel().getObjClass().TARGET_ID, (targetClass) obj.getId())),
+              AND(rope.getIsInverse(), EQ(rope.getJunctionModel().getObjClass().SOURCE_ID, (targetClass) obj.getId()))
             )
           )
           .select(new ArraySink()))
