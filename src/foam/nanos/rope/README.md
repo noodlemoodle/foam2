@@ -81,11 +81,11 @@ Suppose that we want a basic ROPE which will grant permissions to write to `tran
 
 First we start by setting up the ROPE for the `accountDAO` to `transactionDAO` in a beanshell style code snippet. Here we have that a transaction can be created or read in one of two ways, 
 1. Direct ownership of the sourceAccount
-2. Indirectly through checking the authorization on the parent account of the sourceAccount 
+2. Indirectly through checking the authorization on the parent account of the sourceAccount  (ignore)
 
 ``` java
-    createMap.put("__default__", new ArrayList<String>(Arrays.asList( "owner", "parent" )));
-    readMap.put("__default__", new ArrayList<String>(Arrays.asList( "owner", "parent" )));
+    createMap.put("__default__", new ArrayList<String>(Arrays.asList( "owner" )));
+    readMap.put("__default__", new ArrayList<String>(Arrays.asList( "owner" )));
 
     // Non-system users should not have authorization to update or delete accounts; so no path is granted for this operation
     updateMap.put("__default__", null);
@@ -105,7 +105,7 @@ First we start by setting up the ROPE for the `accountDAO` to `transactionDAO` i
       .build());
 ```
 
-Next we setup our `accountDAO` to `accountDAO` ROPE. Here we have that an account can be created, read, updated, or deleted in one of two ways,
+<!-- Next we setup our `accountDAO` to `accountDAO` ROPE. Here we have that an account can be created, read, updated, or deleted in one of two ways,
   1. Direct ownership of the account
   2. Indirectly through checking the authorization on the parent account 
 
@@ -131,9 +131,9 @@ Next we setup our `accountDAO` to `accountDAO` ROPE. Here we have that an accoun
       .setRelationshipMap(relationshipMap)   
       .build());
     createMap.clear(); readMap.clear(); updateMap.clear(); deleteMap.clear(); crudMap.clear(); relationshipMap.clear();
-```
+``` -->
 
-Finally, we finish this examply by setting up the `userDAO` to `transactionDAO` ROPE and we are done. Here an account can be created, read, updated, and deleted by any user that is the "owner" to the account.
+Then, we set up the `userDAO` to `transactionDAO` ROPE and we are done. Here an account can be created, read, updated, and deleted by any user that is the "owner" to the account.
 
 ``` java
     createMap.put("__default__", new ArrayList<String>(Arrays.asList( "__terminate__" )));
@@ -145,7 +145,6 @@ Finally, we finish this examply by setting up the `userDAO` to `transactionDAO` 
     crudMap.put("update", updateMap);
     crudMap.put("delete", deleteMap);
     // this rope may be reached by either of the ropes reached about, and is the last step for both of those ropes
-    relationshipMap.put("parent", new ArrayList<String>(Arrays.asList( "__terminate__" )));
     relationshipMap.put("sourceAccount", new ArrayList<String>(Arrays.asList( "__terminate__" )));
 
     ropeDAO.inX(x).put(new ROPE.Builder(x)
