@@ -184,6 +184,50 @@ foam.RELATIONSHIP({
   inverseName: 'users',
   sourceProperty: {
     section: 'administrative'
+  },
+  generateRopes: {
+    forward: {
+      crudMap: {
+        'create' : {
+          '__default__' : ['123']
+        }
+      },
+      relationshipMap: {
+        '567' : ['567', '000']
+      }
+    },
+    inverse: {
+      crudMap: {
+        'create' : {
+          '__default__' : ['234']
+        }
+      },
+      relationshipMap: {
+        '678' : ['678', '000']
+      }
+    }, 
+    // junction: {
+    //   source: {
+    //     crudMap: {
+    //       'create' : {
+    //         '__default__' : ['345']
+    //       }
+    //     },
+    //     relationshipMap: {
+    //       '789' : ['789', '000']
+    //     }
+    //   },
+    //   target: {
+    //     crudMap: {
+    //       'create' : {
+    //         '__default__' : ['456']
+    //       }
+    //     },
+    //     relationshipMap: {
+    //       '890' : ['890', '000']
+    //     }
+    //   }
+    // }
   }
 });
 

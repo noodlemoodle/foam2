@@ -1,0 +1,2 @@
+p({"class":"foam.nanos.rope.ROPE","sourceDAOKey":"userDAO","targetDAOKey":"capabilityDAO","cardinality":"*:*","relationshipKey":"users","isInverse":false,"crudMap":{"create":{"__default__":["123"]}},"relationshipMap":{"567":["567","000"]}})
+p({"class":"foam.nanos.rope.ROPE","sourceDAOKey":"capabilityDAO","targetDAOKey":"userDAO","cardinality":"*:*","relationshipKey":"capabilities","isInverse":true,"crudMap":{"create":{"__default__":["234"]}},"relationshipMap":{"678":["678","000"]}})

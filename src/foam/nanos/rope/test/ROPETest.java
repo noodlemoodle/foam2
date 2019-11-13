@@ -36,12 +36,66 @@ public class ROPETest extends Test {
   // AccountUserJunction aujunction;
 
   public void runTest(X x) {
-    x = x.put("localUserDAO", new MDAO(User.getOwnClassInfo()));
-    DAO easydao = new foam.dao.EasyDAO.Builder(x).setInnerDAO((DAO) x.get("localUserDAO")).setAuthorize(false).setOf(User.getOwnClassInfo()).build();
-    x = x.put("userDAO", easydao);
-    x = x.put("accountDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(Account.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("accountDAO").build()).build());
-    x = x.put("transactionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(Transaction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("transactionDAO").build()).build());
-    x = x.put("approvalRequestDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(ApprovalRequest.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("approvalRequestDAO").build()).build());
+
+    ropeDAO = (DAO) x.get("ropeDAO");
+
+
+    // set up a mock rope
+    List<String> list = new ArrayList<String>();
+    Map<String, List<String>> createMap = new HashMap<String, List<String>>();
+    Map<String, List<String>> readMap = new HashMap<String, List<String>>();
+    Map<String, List<String>> updateMap = new HashMap<String, List<String>>();
+    Map<String, List<String>> deleteMap = new HashMap<String, List<String>>();
+    Map<String, Map<String, List<String>>> crudMap = new HashMap<String, Map<String, List<String>>>();
+    Map<String, List<String>> relationshipMap = new HashMap<String, List<String>>();
+
+    // transaction - transaction rope
+
+    list = new ArrayList<String>(Arrays.asList( "sourceAccount", "parent" )); 
+    createMap.put("__default__", list);
+    list = new ArrayList<String>(Arrays.asList( "sourceAccount", "destinationAccount", "parent" ));
+    readMap.put("__default__", list);
+    list = new ArrayList<String>(Arrays.asList( ));
+    updateMap.put("__default__", list);
+    list = new ArrayList<String>(Arrays.asList( ));
+    deleteMap.put("__default__", list);
+    crudMap.put("create", createMap);
+    crudMap.put("read", readMap);
+    crudMap.put("update", updateMap);
+    crudMap.put("delete", deleteMap);
+
+    ropeDAO.put(new ROPE.Builder(x)
+      .setSourceDAOKey("transactionDAO")
+      .setTargetDAOKey("transactionDAO")
+      .setCardinality("1:*")
+      .setRelationshipKey("parent")
+      .setCrudMap(crudMap)           
+      .setRelationshipMap(relationshipMap)   
+      .build());
+
+    List<ROPE> ropes = (List<ROPE> )((ArraySink) ropeDAO.select(new ArraySink())).getArray();
+    System.out.println("ROPES!!!" + ropes.size());
+    for(ROPE rope : ropes ) {
+      System.out.println("ROPE :: ");
+      System.out.println("sourceDAOKey = " + rope.getSourceDAOKey());
+      System.out.println("targetDAOKey = " + rope.getTargetDAOKey());
+      System.out.println("cardinality = " + rope.getCardinality());
+      System.out.println("relationshipKey = " + rope.getRelationshipKey());
+      System.out.println("isInverse = " + rope.getIsInverse());
+      System.out.println("crudMap = " + rope.getCrudMap());
+      System.out.println("relationshipMap = " + rope.getRelationshipMap());
+      Object strs = rope.getCrudMap().get("create").get("__default__");
+      System.out.println(strs);
+      // System.out.println(rope.getCrudMap().get("create").get("__default__"));
+      System.out.println("\n\n ");
+    }
+
+    // x = x.put("localUserDAO", new MDAO(User.getOwnClassInfo()));
+    // DAO easydao = new foam.dao.EasyDAO.Builder(x).setInnerDAO((DAO) x.get("localUserDAO")).setAuthorize(false).setOf(User.getOwnClassInfo()).build();
+    // x = x.put("userDAO", easydao);
+    // x = x.put("accountDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(Account.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("accountDAO").build()).build());
+    // x = x.put("transactionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(Transaction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("transactionDAO").build()).build());
+    // x = x.put("approvalRequestDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(ApprovalRequest.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("approvalRequestDAO").build()).build());
     // x = x.put("accountViewerJunctionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(AccountUserJunction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("accountViewerJunctionDAO").build()).build());
     // x = x.put("accountMakerJunctionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(AccountUserJunction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("accountMakerJunctionDAO").build()).build());
     // x = x.put("accountApproverJunctionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(AccountUserJunction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("accountApproverJunctionDAO").build()).build());
@@ -58,11 +112,11 @@ public class ROPETest extends Test {
     // x = x.put("userMakerJunctionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(AccountUserJunction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("userMakerJunctionDAO").build()).build());
     // x = x.put("userApproverJunctionDAO", new foam.nanos.auth.AuthorizationDAO.Builder(x).setDelegate(new MDAO(AccountUserJunction.getOwnClassInfo())).setAuthorizer(new foam.nanos.rope.ROPEAuthorizer.Builder(x).setTargetDAOKey("userApproverJunctionDAO").build()).build());
     
-    ropeDAO = (DAO) x.get("ropeDAO");
-    userDAO = (DAO) x.get("userDAO");
-    accountDAO = (DAO) x.get("accountDAO");
-    transactionDAO = (DAO) x.get("transactionDAO");
-    approvalRequestDAO = (DAO) x.get("approvalRequestDAO");
+    // ropeDAO = (DAO) x.get("ropeDAO");
+    // userDAO = (DAO) x.get("userDAO");
+    // accountDAO = (DAO) x.get("accountDAO");
+    // transactionDAO = (DAO) x.get("transactionDAO");
+    // approvalRequestDAO = (DAO) x.get("approvalRequestDAO");
     // accountViewerJunctionDAO = (DAO) x.get("accountViewerJunctionDAO");
     // accountMakerJunctionDAO = (DAO) x.get("accountMakerJunctionDAO");
     // accountApproverJunctionDAO = (DAO) x.get("accountApproverJunctionDAO");
@@ -79,11 +133,11 @@ public class ROPETest extends Test {
     // userMakerJunctionDAO = (DAO) x.get("userMakerJunctionDAO");
     // userApproverJunctionDAO = (DAO) x.get("userApproverJunctionDAO");
     
-    setupROPEs(x);
+    // setupROPEs(x);
 
-    testHelperMethods(x);
-    testROPEs(x);
-    ropeDAO.inX(x).removeAll();
+    // testHelperMethods(x);
+    // testROPEs(x);
+    // ropeDAO.inX(x).removeAll();
 
     // add back when liquid stuff merged into dev
     // setupLiquidROPEs(x);
