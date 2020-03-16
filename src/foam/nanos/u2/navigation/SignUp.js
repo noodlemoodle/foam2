@@ -134,6 +134,14 @@ foam.CLASS({
       required: true
     },
     {
+      class: 'Boolean',
+      name: 'isSigningOfficerOfOrganization',
+      label: 'Are you a Signing Officer of this company?',
+      visibility: function(disableCompanyName_) {
+        return disableCompanyName_ ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
+      }
+    },
+    {
       class: 'Reference',
       targetDAOKey: 'countryDAO',
       name: 'countryId',
@@ -252,11 +260,13 @@ foam.CLASS({
       },
       code: function(x) {
         this.isLoading_ = true;
+        console.log(this.dao_);
         this.dao_
           .put(this.User.create({
             firstName: this.firstName,
             lastName: this.lastName,
             organization: this.organization,
+            isSigningOfficerOfOrganization: this.isSigningOfficerOfOrganization,
             userName: this.userName,
             email: this.email,
             desiredPassword: this.desiredPassword,
@@ -267,7 +277,7 @@ foam.CLASS({
             phone: this.Phone.create({ number: this.phone }),
             group: this.group_
           }))
-          .then((user) => {
+          .then((user) => {     
             this.user.copyFrom(user);
             this.updateUser(x);
           }).catch((err) => {
