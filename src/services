@@ -1,5 +1,6 @@
 p({"class":"foam.nanos.boot.NSpec", "name":"nSpecDAO",                           "serve":true,  "authenticate": false, "serviceClass":"foam.dao.ProxyDAO", "client":"{\"of\":\"foam.nanos.boot.NSpec\",\"cache\":true}"})
 
+p({"class":"foam.nanos.boot.NSpec", "name":"googleSheetsDataExport",                       "serve":true,  "boxClass":"foam.nanos.export.GoogleSheetsExportSkeleton", "serviceClass":"foam.nanos.export.GoogleSheetsExportService","client":"{\"class\":\"foam.nanos.export.ClientGoogleSheetsExportService\",\"delegate\":{\"class\":\"foam.box.HTTPBox\", \"url\":\"service/googleSheetsDataExport\"}}"})
 
 p({
   "class":"foam.nanos.boot.NSpec",
@@ -486,10 +487,20 @@ p({
 p({"class":"foam.nanos.boot.NSpec", "name":"digDAO",                            "serve":true,  "serviceScript":"return new foam.dao.EasyDAO.Builder(x).setPm(true).setGuid(true).setOf(foam.nanos.dig.DIG.getOwnClassInfo()).setJournalType(foam.dao.JournalType.SINGLE_JOURNAL).setJournalName(\"digs\").build();","client":"{\"of\":\"foam.nanos.dig.DIG\",\"decorators\": [{\"class\":\"foam.nanos.fs.FileDAODecorator\"},{\"class\":\"foam.nanos.fs.FileArrayDAODecorator\"}]}"})
 p({"class":"foam.nanos.boot.NSpec", "name":"demoObjectDAO",                      "serve":true,  "serviceScript":"return new foam.dao.EasyDAO.Builder(x).setJournalType(foam.dao.JournalType.SINGLE_JOURNAL).setJournalName(\"demoObjects\").setGuid(true).setOf(foam.nanos.demo.DemoObject.getOwnClassInfo()).build();", "client":"{\"of\":\"foam.nanos.demo.DemoObject\", \"remoteListenerSupport\": false}"})
 p({"class":"foam.nanos.boot.NSpec", "name":"fileDAO",                            "serve":true,  "serviceScript":"return new foam.dao.PMDAO(x, new foam.dao.KeyValueDAO.Builder(x).setDelegate(new foam.dao.GUIDDAO(new foam.dao.java.JDAO(x, foam.nanos.fs.File.getOwnClassInfo(), \"files\"))).build());","client":"{\"of\":\"foam.nanos.fs.File\",\"cache\":false,\"decorators\": [{\"class\":\"foam.blob.BlobServiceDecorator\"}]}"})
+
 p({
   "class":"foam.nanos.boot.NSpec",
   "name":"localServiceProviderDAO",
-  "serviceScript":"return new foam.dao.PMDAO(x, new foam.dao.java.JDAO(x, foam.nanos.auth.ServiceProvider.getOwnClassInfo(), \"spids\"));"
+  "serviceScript":
+  """
+    return new foam.dao.EasyDAO.Builder(x)
+      .setPm(true)
+      .setAuthorize(false)
+      .setOf(foam.nanos.auth.ServiceProvider.getOwnClassInfo())
+      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
+      .setJournalName("spids")
+      .build()
+  """
 })
 
 p({
@@ -772,111 +783,6 @@ p({
 
 p({
   "class":"foam.nanos.boot.NSpec",
-  "name":"capabilityCategoryDAO",
-  "lazy":true,
-  "serve":true,
-  "serviceScript":"""
-    return new foam.dao.EasyDAO.Builder(x)
-      .setAuthorize(true)
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("capabilityCategories")
-      .setOf(foam.nanos.crunch.CapabilityCategory.getOwnClassInfo())
-      .build();
-  """,
-  "client":"{\"of\":\"foam.nanos.crunch.CapabilityCategory\"}"
-})
-
-p({
-  "class":"foam.nanos.boot.NSpec",
-  "name":"capabilityDAO",
-  "lazy":true,
-  "serve":true,
-  "serviceScript":"""
-    dao = new foam.dao.EasyDAO.Builder(x)
-      .setAuthorize(true)
-      .setGuid(true)
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("capabilities")
-      .setOf(foam.nanos.crunch.Capability.getOwnClassInfo())
-      .build();
-    dao.addPropertyIndex(new foam.core.PropertyInfo[] { foam.nanos.crunch.Capability.NAME });
-
-    return dao;
-  """,
-  "client":"{\"of\":\"foam.nanos.crunch.Capability\"}"
-})
-
-p({
-  "class": "foam.nanos.boot.NSpec",
-  "name": "capabilityCategoryCapabilityJunctionDAO",
-  "lazy": true,
-  "serve": true,
-  "description": "DAO responsible for storing capabilities' categories.",
-  "serviceScript": """
-    return new foam.dao.EasyDAO.Builder(x)
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("capabilityCategoryCapabilityJunction")
-      .setOf(foam.nanos.crunch.CapabilityCategoryCapabilityJunction.getOwnClassInfo())
-      .build();
-  """,
-  "client": "{\"of\":\"foam.nanos.crunch.CapabilityCategoryCapabilityJunction\", \"remoteListenerSupport\": false}"
-})
-
-p({
-  "class":"foam.nanos.boot.NSpec",
-  "name":"userCapabilityJunctionDAO",
-  "lazy":false,
-  "serve":true,
-  "serviceScript":"""
-    dao = new foam.dao.EasyDAO.Builder(x)
-      .setAuthorize(false)
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("userCapabilityJunctions")
-      .setOf(foam.nanos.crunch.UserCapabilityJunction.getOwnClassInfo())
-      .build();
-    userCap =  new foam.nanos.crunch.UserCapabilityJunctionDAO.Builder(x).setDelegate(dao).build();
-    ruler = new foam.nanos.ruler.RulerDAO(x,userCap, "userCapabilityJunctionDAO");
-    return ruler;
-  """,
-  "client":"{\"of\":\"foam.nanos.crunch.UserCapabilityJunction\", \"remoteListenerSupport\": false}"
-})
-
-p({
-  "class":"foam.nanos.boot.NSpec",
-  "name":"deprecatedCapabilityJunctionDAO",
-  "lazy":false,
-  "serve":true,
-  "serviceScript":"""
-    return new foam.dao.EasyDAO.Builder(x)
-      .setAuthorize(true)
-      .setAuthorizer(new foam.nanos.auth.GlobalReadAuthorizer("deprecatedCapabilityJunction"))
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("deprecatedCapabilityJunctions")
-      .setOf(foam.nanos.crunch.CapabilityCapabilityJunction.getOwnClassInfo())
-      .build();
-  """,
-  "client":"{\"of\":\"foam.nanos.crunch.CapabilityCapabilityJunction\", \"remoteListenerSupport\": false}"
-})
-
-p({
-  "class":"foam.nanos.boot.NSpec",
-  "name":"prerequisiteCapabilityJunctionDAO",
-  "lazy":false,
-  "serve":true,
-  "serviceScript":"""
-    return new foam.dao.EasyDAO.Builder(x)
-      .setAuthorize(true)
-      .setAuthorizer(new foam.nanos.auth.GlobalReadAuthorizer("prerequisiteCapabilityJunction"))
-      .setJournalType(foam.dao.JournalType.SINGLE_JOURNAL)
-      .setJournalName("prerequisiteCapabilityJunctions")
-      .setOf(foam.nanos.crunch.CapabilityCapabilityJunction.getOwnClassInfo())
-      .build();
-  """,
-  "client":"{\"of\":\"foam.nanos.crunch.CapabilityCapabilityJunction\", \"remoteListenerSupport\": false}"
-})
-
-p({
-  "class":"foam.nanos.boot.NSpec",
   "name":"addressParser",
   "lazy":false,
   "serve":false,
@@ -1009,4 +915,34 @@ p({
       }
     }
   """
+})
+
+p({
+  "class":"foam.nanos.boot.NSpec",
+  "name":"googleDriveService",
+  "lazy":false,
+  "service": {
+    "class":"foam.nanos.export.GoogleDriveService"
+  },
+  "documentation": "googleDriveService is used for making calls to Google Drive API"
+})
+
+p({
+  "class":"foam.nanos.boot.NSpec",
+  "name":"googleApiAuthService",
+  "lazy":false,
+  "service": {
+    "class":"foam.nanos.export.GoogleApiAuthService"
+  },
+  "documentation": "googleApiAuthService configures authoriziation (sets scope of permissions which are needed to be granted by user, sets port which will be listening to response and sets folder in which tokens will be stored) and authorize Google API calls"
+})
+
+p({
+  "class":"foam.nanos.boot.NSpec",
+  "name":"googleApiCredentialsConfig",
+  "lazy":false,
+  "service": {
+    "class":"foam.nanos.export.GoogleApiCredentials"
+  },
+  "documentation": "Service for setting authorization request parameters which are required in order to retrieve access token. To download credentials visit Google Developers Console"
 })
