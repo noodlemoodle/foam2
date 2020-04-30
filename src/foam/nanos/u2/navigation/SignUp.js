@@ -139,7 +139,15 @@ foam.CLASS({
       label: 'Are you a Signing Officer of this company?',
       visibility: function(disableCompanyName_) {
         return disableCompanyName_ ? foam.u2.DisplayMode.HIDDEN : foam.u2.DisplayMode.RW;
-      }
+      },
+      help: `A signing officer is a person legally authorized to act on behalf of the business (e.g CEO, COO, board director)`,
+      view: {
+        class: 'foam.u2.view.RadioView',
+        choices: [
+          [true, 'Yes, I am a signing officer'],
+          [false, 'No, I am not'],
+        ],
+      },
     },
     {
       class: 'Reference',

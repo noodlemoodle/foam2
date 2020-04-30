@@ -18,6 +18,7 @@ foam.CLASS({
     'group',
     'loginSuccess',
     'requestLogin',
+    'requestCapability',
     'sessionTimer',
     'window'
   ],
@@ -46,6 +47,7 @@ foam.CLASS({
     {
       name: 'send',
       code: function send(msg) {
+        // console.log('SessionReplyBox');
         var self = this;
         if ( this.RPCErrorMessage.isInstance(msg.object) && msg.object.data.id === 'foam.nanos.auth.AuthenticationException' ) {
           // If the user is already logged in when this happens, then we know
@@ -68,7 +70,6 @@ foam.CLASS({
           if ( this.group && this.group.id !== '' && this.group.softSessionLimit !== 0 ) {
             this.sessionTimer.startTimer(this.group.softSessionLimit);
           }
-
           this.delegate.send(msg);
         }
       },
@@ -138,6 +139,7 @@ return uuid;`
     {
       name: 'send',
       code: function send(msg) {
+        // console.log('SessionClientBox');
         msg.attributes[this.SESSION_KEY] = this.sessionID;
 
         // console.log('***** SEND SESSION ID: ', this.sessionID/*foam.json.stringify(msg)*/);

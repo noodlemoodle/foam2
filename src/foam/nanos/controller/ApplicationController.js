@@ -49,6 +49,7 @@ foam.CLASS({
   ],
 
   imports: [
+    'capabilityDAO',
     'installCSS',
     'sessionSuccess',
     'window'
@@ -59,6 +60,8 @@ foam.CLASS({
     'agent',
     'appConfig',
     'as ctrl',
+    'capabilityAquired',
+    'capabilityCancelled',
     'currentMenu',
     'group',
     'lastMenuLaunched',
@@ -68,6 +71,7 @@ foam.CLASS({
     'menuListener',
     'notify',
     'pushMenu',
+    'requestCapability',
     'requestLogin',
     'signUpEnabled',
     'loginVariables',
@@ -76,7 +80,8 @@ foam.CLASS({
     'webApp',
     'wrapCSS as installCSS',
     'sessionTimer',
-    'crunchController'
+    'crunchController',
+    'capabilityCache'
   ],
 
   constants: {
@@ -214,6 +219,21 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'loginSuccess'
+    },
+    {
+      class: 'Boolean',
+      name: 'capabilityAquired'
+    },
+    {
+      class: 'Boolean',
+      name: 'capabilityCancelled'
+    },
+    {
+      class: 'Map',
+      name: 'capabilityCache',
+      factory: function() {
+        return new Map();
+      }
     },
     {
       class: 'FObjectProperty',
@@ -422,6 +442,42 @@ foam.CLASS({
         self.stack.push({ class: 'foam.u2.view.LoginView', mode_: 'SignIn' }, self);
         self.loginSuccess$.sub(resolve);
       });
+    },
+
+    // capabilityCache map from capa id to boolean of whether or not acquired/rejected by the user
+    function requestCapability(capabilityInfo) {
+
+      // this.capabilityCache.set(capabilityInfo.capabilityOptions[0], false);
+      capabilityInfo.capabilityOptions.forEach((c) => {
+        this.capabilityCache.set(c, false);
+      });
+
+      var self = this;
+      self.capabilityAquired = false;
+      self.capabilityCancelled = false;
+
+      return new Promise(function(resolve, reject) {
+        console.log(capabilityInfo);
+        self.stack.push({
+          class: 'foam.u2.crunch.CapabilityInterceptView',
+          data: self.__subContext__.capabilityDAO,
+          capabilityOptions: capabilityInfo.capabilityOptions
+        });
+        var s1, s2;
+        s1 = self.capabilityAquired$.sub(() => {
+          console.log(self.capabilityCache);
+          s1.detach();
+          s2.detach();
+          resolve();
+        });
+        s2 = self.capabilityCancelled$.sub(() => {
+          console.log(self.capabilityCache);
+          s1.detach();
+          s2.detach();
+          reject();
+        });
+      });
+      
     },
 
     function notify(data, type) {

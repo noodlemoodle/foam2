@@ -32,6 +32,8 @@ foam.CLASS({
       // Pre-Order Traversial of Capability Dependancies.
       // Using Pre-Order here will cause the wizard to display
       // dependancies in a logical order.
+
+      // TODO needs to look up whether the prerequisite is already fulfilled by the user.
       tcRecurse = (sourceId) => {
         return self.prerequisiteCapabilityJunctionDAO.where(
           self.EQ(self.CapabilityCapabilityJunction.SOURCE_ID, sourceId)
@@ -71,6 +73,10 @@ foam.CLASS({
               .filter((capID) => !! capabilityMap[capID].of && !! capabilityMap[capID].daoKey)
               .map((capID) =>
                 this.ctrl[capabilityMap[capID].daoFindKey].id);
+
+            capsList = tcList
+              .filter((capID) => !! capabilityMap[capID].of )
+              .map((capID) => capabilityMap[capID]);
           });
         });
         this.capabilityDAO.find(capabilityId).then((cap) => {
@@ -82,7 +88,7 @@ foam.CLASS({
               daoList: daoList,
               ofList: ofList,
               argsList: argsList,
-              capsList: tcList
+              capsList: capsList
             });
         });
       });

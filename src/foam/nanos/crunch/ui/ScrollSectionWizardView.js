@@ -118,13 +118,13 @@ foam.CLASS({
     {
       name: 'save',
       code: function(x) {
-
         var userCapabilityJunctionDAO = x.userCapabilityJunctionDAO;
 
         this.sectionsList.forEach((m, i) => {
+          var userId = ( this.capsList[i].isAgentCapability  ) ? x.agent.id : x.user.id;
           var ucj = foam.nanos.crunch.UserCapabilityJunction.create({
-            sourceId: x.user.id,
-            targetId: this.capsList[i],
+            sourceId: userId,
+            targetId: this.capsList[i].id,
             data: m.data
           });
           userCapabilityJunctionDAO.put_(x, ucj)

@@ -57,7 +57,8 @@ foam.CLASS({
         User user = getUser(x);
         AuthService auth = (AuthService) x.get("auth");
         boolean isOwner = obj.getSourceId() == user.getId();
-        if ( ! isOwner && ! auth.check(x, "*") ) throw new AuthorizationException();
+        boolean isAgent = x.get("agent") == null ? false : (obj.getSourceId() == ((User) x.get("agent")).getId());
+        if ( (! isOwner && ! isAgent ) && ! auth.check(x, "*") ) throw new AuthorizationException();
       `
     },
     {
