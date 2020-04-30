@@ -21,6 +21,10 @@ foam.CLASS({
 
   implements: [ 'foam.box.Box' ],
 
+  imports: [
+    'requestCapability'
+  ],
+
   requires: [
     'foam.box.RPCReturnMessage',
     'foam.box.RPCErrorMessage'
@@ -66,6 +70,13 @@ foam.CLASS({
           return;
         }
         if ( this.RPCErrorMessage.isInstance(msg.object) ) {
+          if ( msg.object.data.id === 'foam.nanos.crunch.CapabilityRuntimeException' ) {
+            console.log(msg.object.data);
+
+            this.requestCapability(msg.object.data).then(function() {
+              self.clientBox.send(self.msg);
+            });
+          }
           this.reject_(msg.object.data);
           return;
         }

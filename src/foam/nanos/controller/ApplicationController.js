@@ -80,7 +80,8 @@ foam.CLASS({
     'webApp',
     'wrapCSS as installCSS',
     'sessionTimer',
-    'crunchController'
+    'crunchController',
+    'capabilityCache'
   ],
 
   constants: {
@@ -226,6 +227,13 @@ foam.CLASS({
     {
       class: 'Boolean',
       name: 'capabilityCancelled'
+    },
+    {
+      class: 'Map',
+      name: 'capabilityCache',
+      factory: function() {
+        return new Map();
+      }
     },
     {
       class: 'FObjectProperty',
@@ -437,6 +445,11 @@ foam.CLASS({
     },
 
     function requestCapability(capabilityInfo) {
+      
+      capabilityInfo.capabilityOptions.forEach((c) => {
+        this.capabilityCache.set(c, false);
+      });
+
       var self = this;
       self.capabilityAquired = false;
       self.capabilityCancelled = false;
