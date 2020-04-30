@@ -457,7 +457,6 @@ foam.CLASS({
       self.capabilityCancelled = false;
 
       return new Promise(function(resolve, reject) {
-        console.log(capabilityInfo);
         self.stack.push({
           class: 'foam.u2.crunch.CapabilityInterceptView',
           data: self.__subContext__.capabilityDAO,
@@ -465,19 +464,16 @@ foam.CLASS({
         });
         var s1, s2;
         s1 = self.capabilityAquired$.sub(() => {
-          console.log(self.capabilityCache);
           s1.detach();
           s2.detach();
           resolve();
         });
         s2 = self.capabilityCancelled$.sub(() => {
-          console.log(self.capabilityCache);
           s1.detach();
           s2.detach();
           reject();
         });
       });
-      
     },
 
     function notify(data, type) {

@@ -64,6 +64,10 @@ foam.CLASS({
           this.requestLogin().then(function() {
             self.clientBox.send(self.msg);
           });
+        } else if ( this.RPCErrorMessage.isInstance(msg.object) && msg.object.data.id === 'foam.nanos.crunch.CapabilityRuntimeException' ) {
+          this.requestCapability(msg.object.data).then(function() {
+            self.clientBox.send(self.msg);
+          });
         } else {
 
           // fetch the soft session limit from group, and then start the timer
