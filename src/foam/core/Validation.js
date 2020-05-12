@@ -39,14 +39,24 @@ foam.CLASS({
     },
     {
       class: 'String',
+      name: 'errorMessage'
+    },
+    {
+      class: 'String',
       name: 'errorString'
     },
     {
       class: 'Function',
       // TODO: it isn't normal for JS functions to have a 'js' prefix
       name: 'jsErr',
-      expression: function(errorString) {
-        return function() { return errorString; };
+      expression: function(errorString, errorMessage) {
+        return function(obj) { 
+          if ( errorMessage ) {
+            if ( obj && obj[errorMessage] ) return obj[errorMessage];
+            if ( this && this[errorMessage] ) return this[errorMessage];
+          }
+          return errorString;
+        }
       }
     }
   ],
