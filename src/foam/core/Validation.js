@@ -51,11 +51,7 @@ foam.CLASS({
       name: 'jsErr',
       expression: function(errorString, errorMessage) {
         return function(obj) { 
-          if ( errorMessage ) {
-            if ( obj && obj[errorMessage] ) return obj[errorMessage];
-            if ( this && this[errorMessage] ) return this[errorMessage];
-          }
-          return errorString;
+          return errorMessage && obj ? obj[errorMessage] : errorString;
         }
       }
     }
@@ -103,7 +99,8 @@ foam.CLASS({
           return [args, function() {
             for ( var i = 0 ; i < validationPredicates.length ; i++ ) {
               var vp = validationPredicates[i];
-              if ( vp.jsFunc.bind(this)() ) return vp.jsErr.bind(this)();
+              var self = this;
+              if ( vp.jsFunc.bind(self)() ) return vp.jsErr.bind(self)(self);
             }
             return null;
           }];
