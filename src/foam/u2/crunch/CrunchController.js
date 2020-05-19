@@ -79,9 +79,10 @@ foam.CLASS({
             }
           });
           sections = sections.filter(wizardSection =>
-            wizardSection.ucj === null || ! foam.util.equals(
-              wizardSection.ucj.status,
-              self.CapabilityJunctionStatus.GRANTED
+            wizardSection.ucj === null || 
+            ( 
+              ! foam.util.equals(wizardSection.ucj.status, self.CapabilityJunctionStatus.GRANTED ) &&
+              ! foam.util.equals(wizardSection.ucj.status, self.CapabilityJunctionStatus.PENDING ) 
             )
           );
           self.stack.push({
