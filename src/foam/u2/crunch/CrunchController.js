@@ -25,6 +25,11 @@ foam.CLASS({
     'foam.nanos.crunch.UserCapabilityJunction',
     'foam.nanos.crunch.ui.CapabilityWizardSection'
   ],
+  
+  messages: [
+    { name: 'CANNOT_OPEN_GRANTED', message: 'This capability has already been granted to you.' },
+    { name: 'CANNOT_OPEN_PENDING', message: 'This capability is awaiting approval, updates are not permitted at this time.' }
+  ],
 
   methods: [
     function getTC(capabilityId) {
@@ -59,9 +64,24 @@ foam.CLASS({
         tcList => Promise.all(tcList.map(
           capId => this.capabilityDAO.find(capId))));
     },
-    function launchWizard(capabilityId) {
+    async function launchWizard(capabilityId) {
       var self = this;
 
+      var ucj = await this.userCapabilityJunctionDAO.find(
+        this.AND(
+          this.EQ(this.UserCapabilityJunction.SOURCE_ID, this.user ? this.user.id : 0),
+          this.EQ(this.UserCapabilityJunction.TARGET_ID, capabilityId)
+        ));
+
+      if ( ucj ) {
+        var statusGranted = foam.util.equals(ucj.status, self.CapabilityJunctionStatus.GRANTED);
+        var statusPending = foam.util.equals(ucj.status, self.CapabilityJunctionStatus.PENDING);
+        if ( ucj && ( statusGranted || statusPending ) ) {
+          var message = statusGranted ? this.CANNOT_OPEN_GRANTED : this.CANNOT_OPEN_PENDING;
+          self.ctrl.add(foam.u2.dialog.NotificationMessage.create({ message: message}))
+          return;
+        } 
+      }
       return this.getCapabilities(capabilityId).then(capabilities => {
         // Map capabilities to CapabilityWizardSection objects
         return Promise.all(capabilities.map(
