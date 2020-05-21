@@ -596,6 +596,19 @@ foam.LIB({
           body: 'setX(x);'
         });
 
+        if ( cls.name != 'AbstractFObject' ) {
+          cls.method({
+            visibility: 'public',
+            name: 'hashCode',
+            type: 'int',
+            body: 
+              ['int hash = 1'].concat(props.map(function(f) {
+                return 'hash += hash * 31 + foam.util.SafetyUtil.hashCode('+f.name+ '_' +')';
+              })).join(';\n') + ';\n'
+              +'return hash;\n'
+          });
+        }
+
         if ( cls.name != 'AbstractFObject' &&
              ! this.hasOwnAxiom('compareTo') ) {
           cls.method({
@@ -958,6 +971,7 @@ foam.CLASS({
 
   methods: [
     function buildJavaClass(cls) {
+      if ( this.javaType == 'null' ) return;
       cls.method({
         type: this.javaType,
         name: 'get' + foam.String.capitalize(this.name),

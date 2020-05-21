@@ -271,9 +271,6 @@ FOAM_FILES([
   { name: "foam/nanos/logger/Logger" },
   { name: "foam/nanos/logger/DAOLogger" },
   { name: "foam/nanos/logger/LoggingDAO" },
-  { name: "foam/nanos/notification/Notifiable" },
-  { name: "foam/nanos/notification/EmailSetting" },
-  { name: "foam/nanos/notification/NotificationSetting" },
   { name: "foam/dao/EasyDAO" },
   { name: "foam/dao/NoSelectAllDAO" },
   { name: "foam/dao/NullDAO" },
@@ -413,6 +410,7 @@ FOAM_FILES([
   { name: "foam/dao/ClientSink" },
   { name: "foam/u2/ViewFactory", flags: ['web'] },
   { name: "foam/u2/DAOList", flags: ['web'] },
+  { name: "foam/u2/GroupingDAOList", flags: ['web'] },
   { name: "foam/u2/TableView", flags: ['web'] },
   { name: "foam/u2/TableSelection", flags: ['web'] },
   { name: "foam/u2/Scroller", flags: ['web'] },
@@ -760,9 +758,11 @@ FOAM_FILES([
   { name: "foam/u2/detail/SectionedDetailPropertyView" },
 
   // Multiple model - crunch - wizard files
-  { name: "foam/u2/detail/MultipleModelSectionedDetailView" },
-  { name: "foam/nanos/crunch/ui/ScrollSectionWizardView" },
-  { name: "foam/nanos/crunch/ui/CapabilityWizardSection" },
+  { name: "foam/u2/wizard/Wizardlet" },
+  { name: "foam/u2/wizard/BaseWizardlet" },
+  { name: "foam/u2/wizard/WizardletView" },
+  { name: "foam/u2/wizard/ScrollWizardletView" },
+  { name: "foam/nanos/crunch/ui/CapabilityWizardlet" },
 
   { name: "foam/graphics/ZoomMapView" },
   { name: "foam/core/CoreTypesValidationTest" },
