@@ -128,7 +128,7 @@ foam.CLASS({
       } 
 
       if ( ucJunction.getStatus() == CapabilityJunctionStatus.PENDING ) {
-        if ( ! requiresReview || ucJunction.getReviewed() ) ucJunction.setStatus(CapabilityJunctionStatus.GRANTED);
+        if ( ! requiresReview ) ucJunction.setStatus(CapabilityJunctionStatus.GRANTED);
       }
 
       if ( ucJunction.getStatus() == CapabilityJunctionStatus.GRANTED ) {
