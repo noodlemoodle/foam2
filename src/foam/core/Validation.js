@@ -60,7 +60,11 @@ foam.CLASS({
       name: 'jsErr',
       expression: function(errorString, errorMessage) {
         return function(obj) { 
-          return errorMessage && obj ? obj[errorMessage] : errorString;
+          if ( errorMessage && obj ) {
+            if ( obj[errorMessage] ) return obj[errorMessage];
+            console.warn('Error finding message', errorMessage, '. No such message on object.', obj);
+          }
+          return errorString;
         }
       }
     }
