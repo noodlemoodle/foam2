@@ -17,10 +17,10 @@ foam.CLASS({
   ],
 
   javaImports: [
-    'foam.dao.ArraySink',
-    'foam.dao.DAO',
     'foam.core.ContextAgent',
     'foam.core.X',
+    'foam.dao.ArraySink',
+    'foam.dao.DAO',
     'foam.mlang.predicate.AbstractPredicate',
     'foam.nanos.auth.User',
     'java.util.List',
