@@ -376,15 +376,13 @@ foam.CLASS({
     {
       name: 'remove_',
       javaCode: `
-      checkOwnership(x, (UserCapabilityJunction) obj);
-      return super.remove_(x, obj);
+      throw new UnsupportedOperationException("UserCapabilityJunctions should be disabled via status change.");
       `
     },
     {
       name: 'removeAll_',
       javaCode: `
-      DAO dao = getFilteredDAO(x);
-      dao.removeAll_(x, skip, limit, order, predicate);
+      throw new UnsupportedOperationException("UserCapabilityJunctions should be disabled via status change.");
       `
     },
     {
