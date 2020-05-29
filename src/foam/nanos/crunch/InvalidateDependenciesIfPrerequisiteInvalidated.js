@@ -71,7 +71,7 @@ foam.CLASS({
 
             for ( UserCapabilityJunction invalidatedUcj : ucjsToInvalidate ) {
               invalidatedUcj.setStatus(invalidatedStatus);
-              (UserCapabilityJunction) userCapabilityJunctionDAO.put(invalidatedUcj);
+              userCapabilityJunctionDAO.put(invalidatedUcj);
             }
           }
         }, "Remove dependencies on prerequisite ucj removal");
