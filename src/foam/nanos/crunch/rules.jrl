@@ -40,6 +40,28 @@ p({
   "after":false,
   "saveHistory":false,
   "enabled":true,
+  "predicate":{
+    "class":"foam.mlang.predicate.And",
+    "args":[
+      {
+        "class":"foam.nanos.ruler.predicate.PropertyEQValue",
+        "propName":"status",
+        "propValue":{
+          "class":"foam.nanos.crunch.CapabilityJunctionStatus",
+          "ordinal":2
+        },
+        "isNew":false
+      },
+      {
+        "class":"foam.nanos.ruler.predicate.PropertyNEQValue",
+        "propName":"status",
+        "propValue":{
+          "class":"foam.nanos.crunch.CapabilityJunctionStatus",
+          "ordinal":2
+        }
+      }
+    ]
+  },
   "action":{"class":"foam.nanos.crunch.InvalidateDependenciesIfPrerequisiteInvalidated"},
   "lifecycleState":1
 })

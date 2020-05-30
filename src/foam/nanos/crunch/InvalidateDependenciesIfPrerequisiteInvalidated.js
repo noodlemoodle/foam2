@@ -35,10 +35,7 @@ foam.CLASS({
           @Override
           public void execute(X x) {
             UserCapabilityJunction ucj = (UserCapabilityJunction) obj;
-            UserCapabilityJunction old = (UserCapabilityJunction) oldObj;
             CapabilityJunctionStatus invalidatedStatus = ucj.getStatus();
-            if ( old == null || old.getStatus() != CapabilityJunctionStatus.GRANTED || ucj.getStatus() == CapabilityJunctionStatus.GRANTED ) 
-              return;
 
             DAO userCapabilityJunctionDAO = (DAO) x.get("userCapabilityJunctionDAO");
             DAO filteredUserCapabilityJunctionDAO = (DAO) userCapabilityJunctionDAO.where((EQ(UserCapabilityJunction.SOURCE_ID, ucj.getSourceId())));
