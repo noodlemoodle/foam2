@@ -18,7 +18,7 @@ foam.CLASS({
   ],
 
   documentation: `
-      A single card in a list of capabilities.
+    A single card in a list of capabilities.
   `,
 
   methods: [
@@ -39,7 +39,6 @@ foam.CLASS({
             'background-image': "url('" + self.data.icon + "')"
           })
         .end()
-        // TODO: how to represent badges?
         .start()
           .addClass(style.myClass('card-title'))
           .add(( self.data.name != '') ? self.data.name : self.data.id)
@@ -55,12 +54,8 @@ foam.CLASS({
         .end()
         .start()
           .addClass(style.myClass('card-description'))
-          .add(
-            self.data.description ||
-              'no description'
-          )
-        .end()
-        ;
+          .add(self.data.description || 'no description')
+        .end();
     }
   ]
 });

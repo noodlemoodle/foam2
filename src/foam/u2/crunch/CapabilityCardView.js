@@ -16,16 +16,16 @@ foam.CLASS({
     'foam.u2.crunch.Style',
     'foam.nanos.crunch.UserCapabilityJunction',
     'foam.nanos.crunch.CapabilityJunctionStatus',
-    'foam.u2.view.ReadOnlyEnumView',
+    'foam.u2.view.ReadOnlyEnumView'
   ],
 
   imports: [
     'user',
-    'userCapabilityJunctionDAO',
+    'userCapabilityJunctionDAO'
   ],
 
   documentation: `
-      A single card in a list of capabilities.
+    A single card in a list of capabilities.
   `,
 
   methods: [
@@ -44,7 +44,7 @@ foam.CLASS({
           .style({
             'background-image': "url('" + self.data.icon + "')",
             'background-size': 'cover',
-            'background-position': '50% 50%',
+            'background-position': '50% 50%'
           })
         .end()
         .start('span')
@@ -61,7 +61,7 @@ foam.CLASS({
             }
             var badge = self.ReadOnlyEnumView.create({
                 data: statusEnum
-              }).addClass(self.s.myClass('badge'))
+              }).addClass(style.myClass('badge'))
               .style({ 'background-color': statusEnum.background });
             badgeWrapper.add(badge);
           });
@@ -83,8 +83,7 @@ foam.CLASS({
         .start()
           .addClass(style.myClass('card-description'))
           .add(self.data.description)
-        .end()
-        ;
+        .end();
     }
   ]
 });

@@ -279,7 +279,9 @@ foam.CLASS({
         }
       ],
       javaCode: `
-        DAO capabilityDAO = (getX().get("localCapabilityDAO") == null ) ? (DAO) getX().get("capabilityDAO") : (DAO) getX().get("localCapabilityDAO");
+        DAO capabilityDAO = getX().get("localCapabilityDAO") == null ? 
+          (DAO) getX().get("capabilityDAO") : 
+          (DAO) getX().get("localCapabilityDAO");
 
         // Find intercepting capabilities
         List<Capability> capabilities =
@@ -301,7 +303,7 @@ foam.CLASS({
 
         // Add filteredCapabilities to a runtime exception and throw it
         CapabilityRuntimeException ex = new CapabilityRuntimeException(
-          "Permission ["+ permission +"] denied; filteredCapabilities available.");
+          "Permission [" + permission + "] denied. Filtered Capabilities available.");
         for ( Capability cap : filteredCapabilities ) ex.addCapabilityId(cap.getId());
         throw ex;
       `

@@ -22,16 +22,16 @@ foam.CLASS({
     'foam.core.Property',
     'foam.layout.Section',
     'foam.layout.SectionAxiom',
-    'foam.nanos.crunch.UserCapabilityJunction',
+    'foam.nanos.crunch.UserCapabilityJunction'
   ],
 
   properties: [
     // Properties specific to CapabilityWizardSection
     {
-      name: 'capability',
+      name: 'capability'
     },
     {
-      name: 'ucj',
+      name: 'ucj'
     },
 
     // Properties for WizardSection interface
@@ -52,6 +52,12 @@ foam.CLASS({
       
         ret = Object.assign(ret, this.ucj.data);
         return ret;
+      }
+    },
+    {
+      name: 'title',
+      expression: function(capability) {
+        return capability.name;
       }
     }
   ],
