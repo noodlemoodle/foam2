@@ -16,16 +16,16 @@ foam.CLASS({
     'foam.u2.crunch.Style',
     'foam.nanos.crunch.UserCapabilityJunction',
     'foam.nanos.crunch.CapabilityJunctionStatus',
-    'foam.u2.view.ReadOnlyEnumView',
+    'foam.u2.view.ReadOnlyEnumView'
   ],
 
   imports: [
     'user',
-    'userCapabilityJunctionDAO',
+    'userCapabilityJunctionDAO'
   ],
 
   documentation: `
-      A single card in a list of capabilities.
+    A single card in a list of capabilities.
   `,
 
   methods: [
@@ -33,18 +33,19 @@ foam.CLASS({
       this.SUPER();
       var self = this;
 
-      // Methods of Style all return the first argument for chaining
-      self.s = self.Style.create();
+      var style = self.Style.create();
+      style.addBinds(self);
       
       self
-        .s.addClassTo(self)
-        .s.addClassTo(self, 'mode-circle')
+        .addClass(style.myClass())
+        .addClass(style.myClass('mode-circle'))
         .start()
-          .addClass(self.s.myClass('icon-circle'))
+          .addClass(style.myClass('icon-circle'))
           .style({
             'background-image': "url('" + self.data.icon + "')",
             'background-size': 'cover',
             'background-position': '50% 50%',
+            'float': 'left'
           })
         .end()
         .start('span')
@@ -55,49 +56,35 @@ foam.CLASS({
             self.EQ(self.UserCapabilityJunction.SOURCE_ID, self.user.id),
             self.EQ(self.UserCapabilityJunction.TARGET_ID, self.data.id),
           )).then(ucj => {
-            if ( ! ucj ) {
-              var badge = self.Element.create();
-              badge
-                .addClass(self.s.myClass('badge'))
-                .addClass(self.s.myClass('badge-info'))
-                .add("available")
-                ;
-              badgeWrapper.add(badge);
+            var statusEnum =  foam.nanos.crunch.CapabilityJunctionStatus.AVAILABLE;
+            if ( ucj ) {
+              statusEnum = ucj.status;
             }
-            else {
-              var badge = self.ReadOnlyEnumView.create({
-                data: ucj.status
-              })
-                .addClass(self.s.myClass('badge'))
-                .style({ 'background-color': ucj.status.background })
-                ;
-              badgeWrapper.add(badge);
-            }
+            var badge = self.ReadOnlyEnumView.create({
+                data: statusEnum
+              }).addClass(style.myClass('badge'))
+              .style({ 'background-color': statusEnum.background });
+            badgeWrapper.add(badge);
           });
         })
         .end()
         .start()
-          .addClass(self.s.myClass('card-title'))
+          .addClass(style.myClass('card-title'))
           .add(( self.data.name != '') ? self.data.name : self.data.id)
         .end()
         .start()
-          .addClass(self.s.myClass('card-subtitle'))
-          .select(self.data.categories.dao, function (category) {
-            return this.E('span')
-              .addClass(self.s.myClass('category'))
-              .add(category.name)
-              ;
+          .addClass(style.myClass('card-subtitle'))
+          .select(self.data.categories.dao
+            .where(this.EQ(foam.nanos.crunch.CapabilityCategory.VISIBLE, true)), function (category) {
+              return this.E('span')
+                .addClass(style.myClass('category'))
+                .add(category.name);
           })
         .end()
         .start()
-          .addClass(self.s.myClass('card-description'))
-          .add(
-            self.data.description ||
-              'no description'
-          )
-        .end()
-        .s.addBinds(self)
-        ;
+          .addClass(style.myClass('card-description'))
+          .add(self.data.description)
+        .end();
     }
   ]
 });

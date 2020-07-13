@@ -38,11 +38,7 @@ foam.CLASS({
 
   css: `
     ^ {
-      /* The following three lines are a cross-browser
-         equivalent to width: fit-content; in Chrome */
-      width: intrinsic;
-      width: -moz-max-content;
-      width: -webkit-max-content;
+      width: max-content;
       margin: 24px auto 0 auto;
     }
 
@@ -63,7 +59,7 @@ foam.CLASS({
 
     ^container {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
     }
 
     ^ .actions {
@@ -77,6 +73,7 @@ foam.CLASS({
 
     ^full-search-container {
       flex: 0 0 250px;
+      padding-right: 18px;
     }
 
     ^ .foam-u2-view-TableView {

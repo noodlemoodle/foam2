@@ -14,11 +14,11 @@ foam.CLASS({
   ],
 
   javaImports: [
-
     'foam.dao.ArraySink',
     'foam.dao.DAO',
     'foam.dao.Sink',
     'foam.mlang.sink.Count',
+    'java.util.Date',
     'java.util.List',
     'static foam.mlang.MLang.*'
   ],
@@ -147,10 +147,13 @@ foam.CLASS({
     },
     {
       name: 'daoKey',
-      class: 'String'
+      class: 'String',
+      documentation: `
+      daoKey.put() done in UserCapabilityJunctionDAO.
+      Uses contextDAOFindKey to find object to update/put.`
     },
     {
-      name: 'daoFindKey',
+      name: 'contextDAOFindKey',
       class: 'String',
       documentation: 'need to find things dynamically, thus have a string here to specify the object in context to look up.'
     },
@@ -177,13 +180,24 @@ foam.CLASS({
       createVisibility: 'HIDDEN',
       updateVisibility: 'RO',
       tableCellFormatter: function(value, obj) {
-        obj.userDAO.find(value).then(function(user) {
-          if ( user ) {
-            this.add(user.legalName);
-          }
-        }.bind(this));
+        obj.userDAO
+          .where(obj.EQ(foam.nanos.auth.User.ID, value))
+          .limit(1)
+          .select(obj.PROJECTION(foam.nanos.auth.User.LEGAL_NAME))
+          .then(function(result) {
+            if ( ! result || result.array.size < 1 || ! result.array[0]) {
+              this.add(value);
+              return;
+            }
+            this.add(result.array[0]);
+          }.bind(this));
       }
     },
+    {
+      name: 'reviewRequired',
+      class: 'Boolean',
+      permissionRequired: true
+    }
   ],
 
 
@@ -256,6 +270,19 @@ foam.CLASS({
       return ((Count) count).getValue() > 0;
       `
     },
+    {
+      name: 'isExpired',
+      type: 'Boolean',
+      documentation: `check if a given capability is expired.`,
+      javaCode: `
+      if ( getExpiry() == null ) return false;
+
+      Date today = new Date();
+      Date capabilityExpiry = getExpiry();
+
+      return today.after(capabilityExpiry);
+      `
+    }
   ]
 });
 

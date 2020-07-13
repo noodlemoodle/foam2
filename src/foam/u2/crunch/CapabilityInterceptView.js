@@ -12,118 +12,137 @@ foam.CLASS({
   implements: [ 'foam.mlang.Expressions' ],
 
   requires: [
-    'foam.u2.layout.Grid',
-    'foam.u2.layout.GUnit',
+    'foam.log.LogLevel',
+    'foam.nanos.crunch.Capability',
+    'foam.nanos.crunch.CapabilityJunctionStatus',
+    'foam.nanos.crunch.UserCapabilityJunction',
     'foam.u2.crunch.CapabilityCardView',
-    'foam.nanos.crunch.Capability'
+    'foam.u2.layout.Rows'
   ],
 
   imports: [
-    'capabilityAquired',
-    'capabilityCancelled',
+    'capabilityCache',
+    'capabilityDAO',
     'crunchController',
+    'notify',
     'stack',
-    'capabilityCache'
+    'user',
+    'userCapabilityJunctionDAO'
   ],
 
   properties: [
-    {
-      name: 'capabilityOptions',
-      class: 'StringArray'
-    },
     {
       name: 'capabilityView',
       class: 'foam.u2.ViewSpec',
       factory: function () {
         return 'foam.u2.crunch.CapabilityCardView';
       }
+    },
+    {
+      name: 'onClose',
+      class: 'Function',
+      factory: () => (x) => {
+        x.closeDialog();
+      }
     }
   ],
 
+  messages: [
+    { name: 'REJECTED_MSG', message: 'Your choice to bypass this was stored, please refresh page to revert cancel selection.' }
+  ],
+
   css: `
-    ^ {
-      width: 1024px;
-      margin: auto;
-    }
     ^detail-container {
-      overflow-x: scroll;
+      overflow-y: scroll;
+    }
+    ^ > *:not(:last-child) {
+      margin-bottom: 24px !important;
     }
   `,
 
   methods: [
     function initE() {
-      this.capabilityOptions.forEach((c) => {
-        if ( this.capabilityCache.has(c) && this.capabilityCache.get(c) === true ) {
-          capabilityAquired = true;
-          this.stack.back();
+      this.data.capabilityOptions.forEach((c) => {
+        if ( this.capabilityCache.has(c) && this.capabilityCache.get(c) ) {
+          this.aquire();
         }
       });
 
-      var view = this;
+      var self = this;
       this
         .addClass(this.myClass())
-
+        .start(this.Rows)
+          .addClass(this.myClass('detail-container'))
+          .add(this.slot(function (data$capabilityOptions) {
+            return this.E().select(this.capabilityDAO.where(
+              self.IN(self.Capability.ID, data$capabilityOptions)
+            ), (cap) => {
+              return this.E().tag(self.capabilityView, {
+                data: cap
+              })
+                .on('click', () => {
+                  var p = self.crunchController.launchWizard(cap.id);
+                  p.then(() => {
+                    this.checkStatus(cap);
+                  })
+                })
+            })
+          }))
+        .end()
         .startContext({ data: this })
           .tag(this.CANCEL, { buttonStyle: 'SECONDARY' })
-          .tag(this.AQUIRE, { buttonStyle: 'SECONDARY' })
-        .endContext()
-
-        .start()
-          .addClass(this.myClass('detail-container'))
-          .add(this.slot(function (capabilityOptions) {
-            var spot = this.E('span')
-            this.data.where(
-                this.IN(view.Capability.ID, capabilityOptions))
-              .select().then((result) => {
-                let arr = result.array;
-                let grid = view.Grid.create();
-                for ( let i = 0 ; i < arr.length; i++ ) {
-                  let cap = arr[i];
-                  grid == grid
-                    .start(view.GUnit, { columns: 4 })
-                      .tag(view.capabilityView, { data: cap })
-                      .on('click', () => {
-                        view.crunchController.launchWizard(cap.id);
-                        // TODO: after wizard is done set capabilityAquired
-                        //       or capabilityCancelled
-                      })
-                    .end()
-                    ;
-                  spot.add(grid);
-                }
-              })
-            return spot;
-          }))
-        .end();
+        .endContext();
+    },
+    function checkStatus(cap) {
+      // Query UCJ status
+      this.userCapabilityJunctionDAO.where(this.AND(
+        this.EQ(this.UserCapabilityJunction.SOURCE_ID, this.user.id),
+        this.EQ(this.UserCapabilityJunction.TARGET_ID, cap.id)
+      )).limit(1).select(this.PROJECTION(
+        this.UserCapabilityJunction.STATUS
+      )).then(results => {
+        if ( results.array.length < 1 ) {
+          this.reject();
+          return;
+        }
+        var entry = results.array[0]; // limit 1
+        var status = entry[0]; // first field (status)
+        switch ( status ) {
+          case this.CapabilityJunctionStatus.GRANTED:
+            this.aquire();
+            break;
+          default:
+            this.reject();
+            break;
+        }
+      });
+    },
+    function aquire(x) {
+      x = x || this.__subSubContext__;
+      this.data.aquired = true;
+      this.data.capabilityOptions.forEach((c) => {
+        this.capabilityCache.set(c, true);
+      });
+      this.onClose(x);
+    },
+    function reject(x) {
+      x = x || this.__subSubContext__;
+      this.data.cancelled = true;
+      this.data.capabilityOptions.forEach((c) => {
+        this.capabilityCache.set(c, true);
+      });
+      this.notify(this.REJECTED_MSG, '', this.LogLevel.INFO, true);
+      this.onClose(x);
     }
   ],
 
   actions: [
     {
       name: 'cancel',
-      code: function() {
-        // todo find which capability was applied for
-        this.capabilityOptions.forEach((c) => {
-          this.capabilityCache.set(c, true);
-        });
-        if ( ! this.capabilityAquired ) this.capabilityCancelled = true;
-        this.stack.back();
-      }
-    },
-    {
-      name: 'aquire',
-      label: 'return with capabilityAquired=true',
-      code: function() {
-        // todo find which capability was applied for
-        this.capabilityAquired = true;
-        this.capabilityOptions.forEach((c) => {
-          this.capabilityCache.set(c, true);
-        });
-        this.stack.back();
-        alert('Your permissions has changed.');
-        location.reload();
+      label: 'Not interested in adding this functionality',
+      code: function(x) {
+        this.reject(x);
       }
     }
   ]
 });
-

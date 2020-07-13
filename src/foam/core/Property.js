@@ -287,7 +287,13 @@ foam.CLASS({
     },
     {
       name: 'type',
-    }
+    },
+    {
+      class: 'Boolean',
+      name: 'sortable',
+      value: true
+    },
+    'valueToString'
   ],
 
   methods: [

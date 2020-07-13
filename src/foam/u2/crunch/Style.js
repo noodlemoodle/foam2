@@ -128,7 +128,6 @@ foam.CLASS({
 
     ^icon-circle {
       display: inline-block;
-      float: left;
       margin-right: 15px;
       width: 80px;
       height: 80px;
@@ -192,14 +191,6 @@ foam.CLASS({
   `,
 
   methods: [
-    function addClassTo(subj, cls) {
-      if ( cls ) {
-        subj.addClass(this.myClass(cls));
-      } else {
-        subj.addClass(this.myClass());
-      }
-      return subj;
-    },
     function addBinds(subj) {
       subj.on('mouseover', function() {
         subj.addClass('state-hover');

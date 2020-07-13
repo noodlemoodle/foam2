@@ -9,6 +9,10 @@
   name: 'ScrollTableView',
   extends: 'foam.u2.Element',
 
+  exports: [
+    'as summaryView'
+  ],
+
   requires: [
     'foam.dao.FnSink',
     'foam.mlang.sink.Count',
@@ -246,7 +250,6 @@
           this.table_.add(tbody);
           this.renderedPages_[page] = tbody;
         }
-
       }
     },
     {

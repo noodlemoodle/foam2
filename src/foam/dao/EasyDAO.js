@@ -146,6 +146,12 @@ foam.CLASS({
           }
         }
 
+        if ( getStorageOptionalEnabled() ) {
+          delegate = new foam.dao.StorageOptionalDAO.Builder(getX())
+            .setDelegate(delegate)
+            .build();
+        }
+
         delegate = getOuterDAO(delegate);
 
         if ( getDecorator() != null ) {
@@ -163,12 +169,15 @@ foam.CLASS({
         }
 
         if ( getApprovableAware() ) {
-          delegate = new foam.nanos.approval.ApprovableAwareDAO
-          .Builder(getX())
-          .setDaoKey(getName())
-          .setOf(getOf())
-          .setDelegate(delegate)
-          .build();
+          var delegateBuilder = new foam.nanos.approval.ApprovableAwareDAO
+            .Builder(getX())
+            .setDaoKey(getName())
+            .setOf(getOf())
+            .setDelegate(delegate);
+          if(approvableAwareServiceNameIsSet_)
+            delegateBuilder.setServiceName(getApprovableAwareServiceName());
+
+          delegate = delegateBuilder.build();
 
           if ( getApprovableAwareEnabled() ) {
             logger.warning("DEPRECATED: EasyDAO", getName(), "'approvableAwareEnabled' is deprecated. Please remove it from the nspec.");
@@ -660,7 +669,23 @@ model from which to test ServiceProvider ID (spid)`,
       `,
       javaFactory: 'return false;'
     },
- ],
+    {
+      name: 'approvableAwareServiceName',
+      class: 'String',
+      documentation: 'If the DAO is approvable aware, this sets the ApprovableAwareDAO ServiceName field'
+    },
+    {
+      name: 'approvableAwareRelationshipName',
+      class: 'String',
+      documentation: 'If the DAO is approvable aware, this sets the ApprovableAwareDAO RelationshipName field'
+    },
+    {
+      name: 'storageOptionalEnabled',
+      class: 'Boolean',
+      documentation: 'Discard DAO updates which result in only storageOptional properties changing, like LastModified, for example.',
+      javaFactory: 'return false;'
+    }
+  ],
 
   methods: [
     {

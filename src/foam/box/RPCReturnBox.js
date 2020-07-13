@@ -70,10 +70,12 @@ foam.CLASS({
           return;
         }
         if ( this.RPCErrorMessage.isInstance(msg.object) ) {
-          if ( this.RPCErrorMessage.isInstance(msg.object) && msg.object.data.id === 'foam.nanos.crunch.CapabilityRuntimeException' ) {
+          if ( msg.object.data.id === 'foam.nanos.crunch.CapabilityRuntimeException' ) {
             this.requestCapability(msg.object.data).then(function() {
               self.clientBox.send(self.msg);
             });
+            this.resolve_(msg.object.data);
+            return;
           } 
           this.reject_(msg.object.data);
           return;

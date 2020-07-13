@@ -23,16 +23,17 @@ foam.CLASS({
     'foam.u2.crunch.CapabilityCardView',
     'foam.u2.crunch.CapabilityFeatureView',
     'foam.u2.layout.Grid',
-    'foam.u2.layout.GUnit',
+    'foam.u2.layout.GUnit'
   ],
 
   imports: [
     'auth',
+    'ctrl',
+    'capabilityCategoryCapabilityJunctionDAO',
     'capabilityCategoryDAO',
     'capabilityDAO',
-    'capabilityCategoryCapabilityJunctionDAO',
-    'registerElement',
-    'crunchController'
+    'crunchController',
+    'registerElement'
   ],
 
   messages: [
@@ -45,7 +46,7 @@ foam.CLASS({
       margin: auto;
       padding: 12px 24px 24px 24px;
     }
-    ^four-column-grid {
+    ^feature-column-grid {
       justify-content: space-between;
       display: flex;
       flex-direction: row;
@@ -62,19 +63,30 @@ foam.CLASS({
         DAO with only visible capabilities.
       `,
       factory: function () {
-        return this.capabilityDAO.where(this.EQ(
-          this.Capability.VISIBLE, true));
+        return this.capabilityDAO
+          .where(this.EQ(this.Capability.VISIBLE, true));
       }
     },
     {
       name: 'featuredCapabilities',
       class: 'foam.dao.DAOProperty',
       documentation: `
-        DAO Property to find four capabilities to feature.
+        DAO Property to find capabilities to feature.
       `,
       factory: function () {
-        return this.visibleCapabilityDAO.where(this.IN(
-          "featured", this.Capability.KEYWORDS));
+        return this.visibleCapabilityDAO
+          .where(this.IN('featured', this.Capability.KEYWORDS));
+      }
+    },
+    {
+      name: 'visibleCategoryDAO',
+      class: 'foam.dao.DAOProperty',
+      documentation: `
+        DAO Property to find categories that are visible.
+      `,
+      expression: function (capabilityCategoryDAO) {
+        return capabilityCategoryDAO
+          .where(this.EQ(this.CapabilityCategory.VISIBLE, true));
       }
     }
   ],
@@ -96,12 +108,11 @@ foam.CLASS({
           // TODO: replace this .call with a .select once
           //       duplication error is fixed
           .call(function() {
-            self.capabilityCategoryDAO.select().then((a) => {
-              for ( let i=0; i < a.array.length; i++ ) {
+            self.visibleCategoryDAO.select().then((a) => {
+              for ( let i = 0 ; i < a.array.length ; i++ ) {
                 let category = a.array[i];
                 let e = self.Tab.create({ label: category.name })
-                  .add(self.renderSection(category))
-                  ;
+                  .add(self.renderSection(category));
                 this.add(e);
               }
             });
@@ -118,9 +129,8 @@ foam.CLASS({
             let arr = result.array;
             let grid = self.E();
             grid
-              .addClass(self.myClass('four-column-grid'))
-              ;
-            for ( let i=0 ; i < arr.length ; i++ ) {
+              .addClass(self.myClass('feature-column-grid'));
+            for ( let i = 0 ; i < arr.length ; i++ ) {
               let cap = arr[i];
               grid = grid
                 .start('div', { columns: 3 })
@@ -138,22 +148,20 @@ foam.CLASS({
                   .on('click', () => {
                     self.crunchController.launchWizard(cap.id);
                   })
-                .end()
-                ;
+                .end();
             }
             spot.add(grid);
           });
           return spot;
         }))
         // Capability Store Section Previews
-        .select(self.capabilityCategoryDAO, function(category) {
+        .select(self.visibleCategoryDAO, function(category) {
           var sectionElement = this.E('span');
           var returnElement = this.E()
             .start('h3')
               .add(category.name)
             .end()
-            .add(sectionElement)
-            ;
+            .add(sectionElement);
           var previewIdsPromise = self.getCategoryDAO_(category.id).limit(6)
             .select().then(arraySink => arraySink.array.map(x => x.targetId) );
 
@@ -163,7 +171,7 @@ foam.CLASS({
             ).select().then((result) => {
               let arr = result.array;
               let grid = self.Grid.create();
-              for ( let i=0 ; i < arr.length ; i++ ) {
+              for ( let i = 0 ; i < arr.length ; i++ ) {
                 let cap = arr[i];
                 grid = grid
                   .start(self.GUnit, { columns: 4 })
@@ -171,32 +179,31 @@ foam.CLASS({
                     .on('click', () => {
                       self.crunchController.launchWizard(cap.id);
                     })
-                  .end()
-                  ;
+                  .end();
               }
               sectionElement.add(grid);
             });
           });
           return returnElement;
-        })
-        ;
+        });
     },
     function renderSection(category) {
       var self = this;
       var sectionElement = this.E();
 
       // Promise 'p' reports capability IDs that are in this category
-      var p = self.getCategoryDAO_(category.id)
-        .select().then(arraySink => arraySink.array.map(x => x.targetId) );
+      var p = self.getCategoryDAO_(category.id).select(self.PROJECTION(self.CapabilityCategoryCapabilityJunction.TARGET_ID));
+      
 
       // When 'p' resolves, query all matching capabilities
-      p.then(capabilityIds => {
+      p.then(arraySink => {
+        capabilityIds = arraySink.array;
         self.visibleCapabilityDAO.where(
           self.IN(self.Capability.ID, capabilityIds)
         ).select().then((result) => {
           let arr = result.array;
           let grid = self.Grid.create();
-          for ( let i=0 ; i < arr.length ; i++ ) {
+          for ( let i = 0 ; i < arr.length ; i++ ) {
             let cap = arr[i];
             grid = grid
               .start(self.GUnit, { columns: 4 })
@@ -204,8 +211,7 @@ foam.CLASS({
                 .on('click', () => {
                   self.crunchController.launchWizard(cap.id);
                 })
-              .end()
-              ;
+              .end();
           }
           sectionElement.add(grid);
         });
@@ -219,7 +225,7 @@ foam.CLASS({
           categoryId));
     },
     function signingOfficerQuestion() {
-      return this.auth.check(this.__subContext__, "businessHasSigningOfficer");
+      return this.auth.check(this.ctrl.__subContext__, 'businessHasSigningOfficer');
     }
   ]
 });

@@ -14,22 +14,27 @@ foam.CLASS({
   imports: [
     'appConfig',
     'auth',
-    'notify',
+    'ctrl',
     'stack',
     'user'
   ],
 
   requires: [
+    'foam.log.LogLevel',
     'foam.nanos.auth.Address',
     'foam.nanos.auth.Country',
-    'foam.nanos.auth.Phone',
-    'foam.nanos.auth.User'
+    'foam.nanos.auth.User',
+    'foam.u2.dialog.NotificationMessage'
   ],
 
   messages: [
     { name: 'TITLE', message: 'Create a free account' },
     { name: 'FOOTER_TXT', message: 'Already have an account?' },
-    { name: 'FOOTER_LINK', message: 'Sign in' }
+    { name: 'FOOTER_LINK', message: 'Sign in' },
+    { name: 'ERROR_MSG', message: 'There was a problem creating your account.' },
+    { name: 'SELECTION_TEXT', message: 'Select your country' },
+    { name: 'SELECTION', message: 'Please select...' },
+    { name: 'VALIDATION_ERR_TEXT', message: 'Please enter job title'}
   ],
 
   properties: [
@@ -102,7 +107,7 @@ foam.CLASS({
           otherKey: 'Other',
           choiceView: {
             class: 'foam.u2.view.ChoiceView',
-            placeholder: 'Please select...',
+            placeholder: X.data.SELECTION,
             dao: X.jobTitleDAO,
             objToChoice: function(a) {
               return [a.name, a.label];
@@ -116,7 +121,7 @@ foam.CLASS({
           predicateFactory: function(e) {
             return e.NEQ(foam.nanos.u2.navigation.SignUp.JOB_TITLE, '');
           },
-          errorString: 'Please enter job title'
+          errorMessage: 'VALIDATION_ERR_TEXT'
         }
       ],
       required: true
@@ -153,7 +158,7 @@ foam.CLASS({
           return X.countryDAO.where(E.IN(X.data.Country.ID, countryChoices_));
         });
         return foam.u2.view.ChoiceView.create({
-          placeholder: 'Select your country',
+          placeholder: X.data.SELECTION_TEXT,
           objToChoice: function(a) {
             return [a.id, a.name];
           },
@@ -270,14 +275,17 @@ foam.CLASS({
             address: this.Address.create({ countryId: this.countryId }),
             welcomeEmailSent: true,
             jobTitle: this.jobTitle,
-            phone: this.Phone.create({ number: this.phone }),
+            phoneNumber: this.phone,
             group: this.group_
           }))
           .then((user) => {
             this.user.copyFrom(user);
             this.updateUser(x);
           }).catch((err) => {
-            this.notify(err.message || 'There was a problem creating your account.', 'error');
+            this.ctrl.add(this.NotificationMessage.create({
+              message: err.message || this.ERROR_MSG,
+              type: this.LogLevel.ERROR
+            }));
           })
           .finally(() => {
             this.isLoading_ = false;

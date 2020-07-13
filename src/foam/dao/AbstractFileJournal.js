@@ -14,20 +14,22 @@ foam.CLASS({
     'foam.core.FObject',
     'foam.core.PropertyInfo',
     'foam.core.ProxyX',
+    'foam.lib.StoragePropertyPredicate',
     'foam.lib.json.ExprParser',
     'foam.lib.json.JSONParser',
     'foam.lib.json.Outputter',
-    'foam.lib.StoragePropertyPredicate',
     'foam.lib.parse.*',
     'foam.nanos.auth.LastModifiedByAware',
+    'foam.nanos.auth.Subject',
     'foam.nanos.auth.User',
     'foam.nanos.logger.Logger',
     'foam.nanos.logger.PrefixLogger',
     'foam.nanos.logger.StdoutLogger',
+
     'java.io.BufferedReader',
     'java.io.BufferedWriter',
-    'java.io.InputStreamReader',
     'java.io.InputStream',
+    'java.io.InputStreamReader',
     'java.io.OutputStream',
     'java.io.OutputStreamWriter',
     'java.util.Calendar',
@@ -184,7 +186,7 @@ try {
 
           public void executeJob() {}
 
-          public void endJob() {
+          public void endJob(boolean isLast) {
             try {
               record_ = ( old != null ) ?
                 getOutputter().stringifyDelta(old, obj) :
@@ -204,7 +206,7 @@ try {
                 getMultiLineOutput() ? "\\n" : "",
                 foam.util.SafetyUtil.isEmpty(prefix) ? "" : prefix + ".");
 
-                if ( isLast() ) getWriter().flush();
+                if ( isLast ) getWriter().flush();
             } catch (Throwable t) {
               getLogger().error("Failed to write put entry to journal", t);
             }
@@ -283,14 +285,14 @@ try {
           }
         }
 
-        public void endJob() {
+        public void endJob(boolean isLast) {
           if ( foam.util.SafetyUtil.isEmpty(record_) ) return;
 
           try {
             writeComment_(x, obj);
             writeRemove_(x, record_, foam.util.SafetyUtil.isEmpty(prefix) ? "" : prefix + ".");
 
-            if ( isLast() ) getWriter().flush();
+            if ( isLast ) getWriter().flush();
           } catch (Throwable t) {
             getLogger().error("Failed to write put entry to journal", t);
           }
@@ -363,10 +365,9 @@ try {
         }
       ],
       javaCode: `
-        if ( x.get("user") == null || ((User) x.get("user")).getId() <= 1 ) return;
+        User user = ((Subject) x.get("subject")).getUser();
+        if ( user == null || user.getId() <= 1 ) return;
         if ( obj instanceof LastModifiedByAware && ((LastModifiedByAware) obj).getLastModifiedBy() != 0L ) return;
-
-        User user = (User) x.get("user");
 
         write_(sb.get()
           .append("// Modified by ")

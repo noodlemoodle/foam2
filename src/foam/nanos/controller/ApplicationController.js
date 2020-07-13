@@ -35,13 +35,19 @@ foam.CLASS({
   requires: [
     'foam.nanos.client.ClientBuilder',
     'foam.nanos.auth.Group',
-    'foam.nanos.auth.ResendVerificationEmail',
     'foam.nanos.auth.User',
+    'foam.nanos.auth.Subject',
+    'foam.nanos.notification.Notification',
+    'foam.nanos.notification.ToastState',
     'foam.nanos.theme.Theme',
+    'foam.nanos.theme.Themes',
     'foam.nanos.theme.ThemeDomain',
     'foam.nanos.u2.navigation.TopNavigation',
     'foam.nanos.u2.navigation.FooterView',
+    'foam.u2.crunch.CapabilityIntercept',
+    'foam.u2.crunch.CapabilityInterceptView',
     'foam.u2.crunch.CrunchController',
+    'foam.u2.borders.MarginBorder',
     'foam.u2.stack.Stack',
     'foam.u2.stack.StackView',
     'foam.u2.dialog.NotificationMessage',
@@ -52,8 +58,9 @@ foam.CLASS({
   imports: [
     'capabilityDAO',
     'installCSS',
+    'notificationDAO',
     'sessionSuccess',
-    'window',
+    'window'
   ],
 
   exports: [
@@ -78,6 +85,7 @@ foam.CLASS({
     'signUpEnabled',
     'loginVariables',
     'stack',
+    'subject',
     'user',
     'webApp',
     'wrapCSS as installCSS',
@@ -130,15 +138,15 @@ foam.CLASS({
 
   css: `
     body {
+      background: /*%GREY5%*/ #f5f7fa;
+      color: #373a3c;
       font-family: 'Roboto', sans-serif;
       font-size: 14px;
       letter-spacing: 0.2px;
-      color: #373a3c;
-      background: /*%GREY5%*/ #f5f7fa;
       margin: 0;
+      overscroll-behavior: none;
     }
     .stack-wrapper {
-      margin-bottom: -10px;
       min-height: calc(80% - 60px);
     }
     .stack-wrapper:after {
@@ -208,6 +216,12 @@ foam.CLASS({
     },
     {
       class: 'foam.core.FObjectProperty',
+      of: 'foam.nanos.auth.Subject',
+      name: 'subject',
+      factory: function() { return this.Subject.create(); }
+    },
+    {
+      class: 'foam.core.FObjectProperty',
       of: 'foam.nanos.auth.Group',
       name: 'group'
     },
@@ -224,7 +238,11 @@ foam.CLASS({
     },
     {
       class: 'Boolean',
-      name: 'capabilityAquired'
+      name: 'capabilityAcquired',
+      documentation: `
+        The purpose of this is to handle the intercept flow for a capability that was granted,
+        via the InterceptView from this.requestCapability(exceptionCapabilityType).
+      `
     },
     {
       class: 'Boolean',
@@ -304,12 +322,30 @@ foam.CLASS({
       this.clientPromise.then(async function(client) {
         self.setPrivate_('__subContext__', client.__subContext__);
 
-        await self.fetchAgent();
-        await self.fetchUser();
+        await self.fetchSubject();
+
+        // add user and agent for backward compatibility
+        Object.defineProperty(self, 'user', {
+          get: function() {
+            console.info("Deprecated use of user. Use Subject to retrieve user");
+            return this.subject.user;
+          },
+          set: function(newValue) {
+            console.warn("Deprecated use of user setter");
+            this.subject.user = newValue;
+          }
+        });
+        Object.defineProperty(self, 'agent', {
+          get: function() {
+            console.warn("Deprecated use of agent");
+            return this.subject.realUser;
+          }
+        });
 
         // Fetch the group only once the user has logged in. That's why we await
         // the line above before executing this one.
         await self.fetchGroup();
+        await self.fetchTheme();
         self.onUserAgentAndGroupLoaded();
       });
     },
@@ -318,12 +354,32 @@ foam.CLASS({
       window.addEventListener('resize', this.updateDisplayWidth);
       this.updateDisplayWidth();
 
+      var userNotificationQueryId = this.subject && this.subject.realUser ?
+      this.subject.realUser.id : this.user.id;
+
+      this.__subSubContext__.notificationDAO.where(
+        this.EQ(this.Notification.USER_ID, userNotificationQueryId)
+      ).on.put.sub((sub, on, put, obj) => {
+        if ( obj.toastState == this.ToastState.REQUESTED ) {
+          this.add(this.NotificationMessage.create({
+            message: obj.toastMessage,
+            type: obj.severity,
+            description: obj.toastSubMessage
+          }));
+          var clonedNotification = obj.clone();
+          clonedNotification.toastState = this.ToastState.DISPLAYED;
+          this.__subSubContext__.notificationDAO.put(clonedNotification);
+        }
+      });
+
       this.clientPromise.then(() => {
         this.fetchTheme().then(() => {
           this
             .addClass(this.myClass())
             .start()
-              .tag(this.topNavigation_)
+              .add(this.slot(function (topNavigation_) {
+                return this.E().tag(topNavigation_);
+              }))
             .end()
             .start()
               .addClass('stack-wrapper')
@@ -334,7 +390,9 @@ foam.CLASS({
               })
             .end()
             .start()
-              .tag(this.footerView_)
+              .add(this.slot(function (footerView_) {
+                return this.E().tag(footerView_);
+              }))
             .end();
           });
       });
@@ -346,28 +404,23 @@ foam.CLASS({
         if ( group == null ) throw new Error(this.GROUP_NULL_ERR);
         this.group = group;
       } catch (err) {
-        this.notify(this.GROUP_FETCH_ERR, 'error');
+        this.notify(this.GROUP_FETCH_ERR, '', this.LogLevel.ERROR, true);
         console.error(err.message || this.GROUP_FETCH_ERR);
       }
     },
 
-    async function fetchUser() {
+    async function fetchSubject() {
       /** Get current user, else show login. */
       try {
-        var result = await this.client.auth.getCurrentUser(null);
-        this.loginSuccess = !! result;
+        var result = await this.client.auth.getCurrentSubject(null);
 
-        if ( ! result ) throw new Error();
+        if ( ! result || ! result.user) throw new Error();
 
-        this.user = result;
+        this.subject = result;
       } catch (err) {
         await this.requestLogin();
-        return await this.fetchUser();
+        return await this.fetchSubject();
       }
-    },
-
-    async function fetchAgent() {
-      this.agent = await this.client.agentAuth.getCurrentAgent();
     },
 
     function expandShortFormMacro(css, m) {
@@ -421,10 +474,15 @@ foam.CLASS({
       }
     },
 
-    function pushMenu(menuId) {
+    function pushMenu(menu) {
+      if ( menu.id ) {
+        menu.launch(this);
+        menu = menu.id;
+      }
+
       /** Use to load a specific menu. **/
-      if ( window.location.hash.substr(1) != menuId ) {
-        window.location.hash = menuId;
+      if ( window.location.hash.substr(1) != menu ) {
+        window.location.hash = menu;
       }
     },
 
@@ -455,34 +513,23 @@ foam.CLASS({
         self.capabilityCache.set(c, false);
       });
 
-      self.capabilityAquired = false;
-      self.capabilityCancelled = false;
-      return new Promise(function(resolve, reject) {
-        self.stack.push({
-          class: 'foam.u2.crunch.CapabilityInterceptView',
-          data: self.__subContext__.capabilityDAO,
-          capabilityOptions: capabilityInfo.capabilityOptions
-        });
-        var s1, s2;
-        s1 = self.capabilityAquired$.sub(() => {
-          s1.detach();
-          s2.detach();
-          resolve();
-        });
-        s2 = self.capabilityCancelled$.sub(() => {
-          s1.detach();
-          s2.detach();
-          reject();
-        });
+      let intercept = self.CapabilityIntercept.create({
+        capabilityOptions: capabilityInfo.capabilityOptions
       });
+
+      return self.crunchController.maybeLaunchInterceptView(intercept);
     },
 
-    function notify(data, type) {
-      /** Convenience method to create toast notifications. */
-      this.add(this.NotificationMessage.create({
-        message: data,
-        type: type
-      }));
+    function notify(toastMessage, toastSubMessage, severity, transient) {
+      var notification = this.Notification.create();
+      notification.userId = this.subject && this.subject.realUser ?
+        this.subject.realUser.id : this.user.id;
+      notification.toastMessage = toastMessage;
+      notification.toastSubMessage = toastSubMessage;
+      notification.toastState = this.ToastState.REQUESTED;
+      notification.severity = severity;
+      notification.transient = transient;
+      this.__subContext__.notificationDAO.put(notification);
     }
   ],
 
@@ -494,24 +541,16 @@ foam.CLASS({
        *   - Update the look and feel of the app based on the group or user
        *   - Go to a menu based on either the hash or the group
        */
-      if ( ! this.user.emailVerified ) {
-        this.loginSuccess = false;
-        this.stack.push({ class: 'foam.nanos.auth.ResendVerificationEmail' });
-        return;
-      }
+      this.fetchTheme();
 
       var hash = this.window.location.hash;
       if ( hash ) hash = hash.substring(1);
 
       if ( hash ) {
         window.onpopstate();
-      } else if ( this.group ) {
-        this.window.location.hash = this.group.defaultMenu;
+      } else if ( this.theme ) {
+        this.window.location.hash = this.theme.defaultMenu;
       }
-
-      // Update the look and feel now that the user is logged in since there
-      // might be a more specific one to use now.
-      this.fetchTheme();
     },
 
     function menuListener(m) {
@@ -537,34 +576,9 @@ foam.CLASS({
        */
       var lastTheme = this.theme;
       try {
-//        this.theme = this.themes.findTheme(this.client);
-        if ( this.user && this.user.theme ) {
-          this.theme = await this.user.theme$find;
-        } else if ( this.group && this.group.theme ) {
-          this.theme = await this.group.theme$find;
-        }
-        if ( ! this.theme ) {
-          var domain = window.location.hostname;
-
-          var themeDomain = await this.client.themeDomainDAO.find(domain);
-          if ( ! themeDomain ) {
-            console.warn('ThemeDomain not found: '+domain);
-            themeDomain = this.ThemeDomain.create({'theme':'foam'});
-          }
-
-          var predicate = this.AND(
-            this.EQ(this.Theme.ID, themeDomain.theme),
-            this.EQ(this.Theme.ENABLED, true)
-          );
-
-          this.theme = await this.client.themeDAO.find(predicate);
-          if ( ! this.theme ) {
-            console.warn('Theme not found: '+domain);
-            this.theme = this.Theme.create({'name':'foam', 'appName':'FOAM'});
-          }
-        }
+        this.theme = await this.Themes.create().findTheme(this);
       } catch (err) {
-        this.notify(this.LOOK_AND_FEEL_NOT_FOUND, 'error');
+        this.notify(this.LOOK_AND_FEEL_NOT_FOUND, '', this.LogLevel.ERROR, true);
         console.error(err);
         return;
       }
