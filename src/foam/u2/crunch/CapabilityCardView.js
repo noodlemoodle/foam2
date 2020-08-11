@@ -30,14 +30,40 @@ foam.CLASS({
     A single card in a list of capabilities.
   `,
 
+  properties: [
+    {
+      name: 'associatedEntity',
+      expression: function(data, subject) {
+        if ( ! data || ! subject ) return '';
+        return data.associatedEntity === foam.nanos.crunch.AssociatedEntity.USER ? subject.user : subject.realUser;
+      }
+    },
+    {
+      name: 'cjStatus',
+      documentation: `
+        Stores the status of the capability feature and is updated when the user
+        attempts to fill out or complete the CRUNCH forms.
+      `,
+      factory: function() {
+        return foam.nanos.crunch.CapabilityJunctionStatus.AVAILABLE;
+      }
+    }
+  ],
+
   methods: [
+    function init() {
+       this.SUPER();
+       this.onDetach(this.userCapabilityJunctionDAO.on.put.sub(this.daoUpdate));
+       this.daoUpdate();
+    },
+
     function initE() {
       this.SUPER();
       var self = this;
 
       var style = self.Style.create();
       style.addBinds(self);
-      
+
       self
         .addClass(style.myClass())
         .addClass(style.myClass('mode-circle'))
@@ -105,6 +131,29 @@ foam.CLASS({
           .addClass(style.myClass('card-description'))
           .add(self.data.description)
         .end();
+    }
+  ],
+
+  listeners: [
+    {
+      name: 'daoUpdate',
+      code: function() {
+        this.userCapabilityJunctionDAO.find(
+          this.AND(
+            this.EQ(this.UserCapabilityJunction.TARGET_ID, this.data.id),
+            this.EQ(this.UserCapabilityJunction.SOURCE_ID, this.associatedEntity.id),
+            this.OR(
+              this.NOT(this.INSTANCE_OF(this.AgentCapabilityJunction)),
+              this.AND(
+                this.INSTANCE_OF(this.AgentCapabilityJunction),
+                this.EQ(this.AgentCapabilityJunction.EFFECTIVE_USER, this.subject.user.id)
+              )
+            )
+          )
+        ).then(ucj => {
+          if ( ucj ) this.cjStatus = ucj.status;
+        });
+      }
     }
   ]
 });
