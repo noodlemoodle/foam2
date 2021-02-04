@@ -66,7 +66,7 @@ foam.CLASS({
         var spidMap = new java.util.HashMap();
         spidMap.put(
           NotificationSetting.class.getName(),
-          new foam.core.PropertyInfo[] { NotificationSetting.OWNER }
+          new foam.core.PropertyInfo[] { NotificationSetting.OWNER, NotificationSetting.USER_JUNCTION }
         );
         return new ServiceProviderAwareSupport()
           .findSpid(foam.core.XLocator.get(), spidMap, this);
